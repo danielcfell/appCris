@@ -40,16 +40,17 @@ Las dependencias van solo hacia abajo. `src/dominio/` no importa React, Expo ni 
 
 ### 2.1 `src/dominio/`
 
-- `dinero.ts`: tipo `Centavos` (entero), `parsearMonto("20,50") → 2050`, `formatearMonto(2050) → "$20,50"` con `Intl.NumberFormat('es-EC', { currency: 'USD' })`. Se rechazan negativos y más de dos decimales.
+- `dinero.ts`: tipo `Centavos` (entero), `parsearMonto("20,50") → 2050` (acepta coma o punto decimal), `formatearMonto(123450) → "$1.234,50"`. Se rechazan negativos y más de dos decimales. El formato se arma a mano en vez de usar `Intl`, porque `Intl` da resultados distintos en Hermes (celular) y en Node (pruebas).
+- `fecha.ts`: validación de fechas `AAAA-MM-DD` y fecha local de un instante.
 - `jornal.ts`: `calcularMonto(cantidadCentesimas, tarifaCentavos)`, `calcularSaldo(monto, pagos)`, `estadoJornal(monto, pagado)` → `'pendiente' | 'parcial' | 'pagado'`.
 - `pago.ts`: `validarPago(saldo, montoPago)`. Lanza `PagoExcedeSaldo` o `MontoInvalido`.
 - `errores.ts`: errores de dominio con mensaje en español listo para mostrar.
 
 ### 2.2 `src/datos/`
 
-- `BaseDatos` (interfaz): `ejecutar(sql, params)`, `consultar<T>(sql, params)`, `transaccion(fn)`. Es asíncrona para que encaje con la API de `expo-sqlite`.
-  - `adaptador-expo.ts`: implementación real. Usa `withExclusiveTransactionAsync`.
-  - `adaptador-node.ts` (solo pruebas): `better-sqlite3`, envuelto en promesas. La transacción se hace a mano con `BEGIN IMMEDIATE` / `COMMIT` / `ROLLBACK`, porque `db.transaction()` de better-sqlite3 no admite funciones asíncronas.
+- `base-datos.ts`: la interfaz `BaseDatos` (`ejecutar`, `consultar`, `consultarUno`, `ejecutarScript`, `transaccion`) y su única implementación, `BaseDatosSqlite`. Esta trabaja sobre **una sola conexión** y pasa todas las operaciones por una cola, así una transacción (`BEGIN IMMEDIATE` / `COMMIT` / `ROLLBACK`) nunca se mezcla con otra operación asíncrona. Dentro de `transaccion(fn)` hay que usar solo el `tx` que recibe `fn`.
+  - Cada motor solo aporta una `ConexionSql` mínima: `adaptador-expo.ts` (celular) y `adaptador-node.ts` (pruebas, `better-sqlite3`). Así las pruebas ejercitan exactamente la misma lógica de transacciones que el celular.
+  - **No se usa `withExclusiveTransactionAsync` de expo-sqlite**: abre una conexión nueva, donde `PRAGMA foreign_keys` queda desactivado, y empieza con un `BEGIN` diferido.
 - `migraciones.ts`: lista ordenada de migraciones SQL. Se aplican al abrir la base según `PRAGMA user_version`, cada una en su propia transacción. Las migraciones solo agregan; nunca editan una migración ya publicada.
 - Repositorios (`trabajadores.ts`, `actividades.ts`, `jornales.ts`, `pagos.ts`, `gastos.ts`, `resumenes.ts`, `config.ts`): SQL explícito, sin ORM.
 - Al abrir la conexión: `PRAGMA foreign_keys = ON`, `PRAGMA journal_mode = WAL`, `PRAGMA synchronous = FULL`. `FULL` garantiza que una operación confirmada sobrevive a un corte de batería (RNF-04).
@@ -60,8 +61,10 @@ Cada acción del usuario que escribe datos es una función que valida con el dom
 
 | Caso de uso | Qué hace | Requisitos |
 |---|---|---|
-| `crearActividadConJornales` | Inserta la actividad y N jornales con cantidad y tarifa comunes o individuales | RF-05, RF-06, RF-07 |
-| `editarJornal` / `eliminarJornal` | Edita o elimina; si tiene pagos, la UI pide confirmación antes | RF-08 |
+| `crearActividadConJornales` | Inserta la actividad y N jornales con cantidad y tarifa comunes o individuales. Sin descripción, usa el nombre del tipo de tarea | RF-05, RF-06, RF-07 |
+| `agregarJornales` | Agrega trabajadores a una actividad ya registrada | RF-06 |
+| `eliminarActividad` | Solo si la actividad no tiene jornales ni gastos | — |
+| `editarJornal` / `eliminarJornal` | Edita cantidad o tarifa, o elimina; si tiene pagos, la UI pide confirmación antes | RF-08 |
 | `registrarPago` | Valida contra el saldo actual y lo inserta | RF-09, RF-12 |
 | `pagarPendientesDeTrabajador` / `pagarPendientesDeActividad` | Un pago por cada jornal con saldo, por el saldo exacto | RF-11 |
 | `registrarGasto` | Con categoría y actividad opcional | RF-16 a RF-18 |
@@ -110,9 +113,9 @@ CREATE TABLE jornal (
   trabajador_id       INTEGER NOT NULL REFERENCES trabajador(id) ON DELETE RESTRICT,
   unidad              TEXT    NOT NULL CHECK (unidad IN ('dia', 'tarea', 'hora')),
   cantidad_centesimas INTEGER NOT NULL CHECK (cantidad_centesimas > 0),
-  tarifa_centavos     INTEGER NOT NULL CHECK (tarifa_centavos >= 0),
+  tarifa_centavos     INTEGER NOT NULL CHECK (tarifa_centavos > 0),
   monto_centavos      INTEGER NOT NULL
-    CHECK (monto_centavos = (cantidad_centesimas * tarifa_centavos + 50) / 100),
+    CHECK (monto_centavos > 0 AND monto_centavos = (cantidad_centesimas * tarifa_centavos + 50) / 100),
   creado_en           TEXT    NOT NULL,
   UNIQUE (actividad_id, trabajador_id)
 );
@@ -218,10 +221,11 @@ Si algo falla, no cambia nada.
 ## 5. Estructura de carpetas prevista
 
 ```
-app/                    (tabs)/debo, actividades, gastos, resumen, mas; rutas de detalle y formularios
-src/dominio/            dinero.ts, jornal.ts, pago.ts, errores.ts (+ *.test.ts)
+src/app/                rutas de expo-router (convención de Expo SDK 57): (tabs)/debo, actividades, gastos,
+                        resumen, mas; rutas de detalle y formularios
+src/dominio/            dinero.ts, fecha.ts, jornal.ts, pago.ts, errores.ts (+ *.test.ts)
 src/datos/              base-datos.ts, adaptador-expo.ts, adaptador-node.ts, migraciones.ts, repositorios
-src/casos-uso/          un archivo por caso de uso (+ *.test.ts de integración)
+src/casos-uso/          casos de uso por entidad (+ *.test.ts de integración, datos-de-prueba.ts)
 src/ui/                 componentes (BotonGrande, MontoInput, TarjetaTrabajador...)
 docs/                   requisitos, diseño, adr
 ```
@@ -239,9 +243,10 @@ docs/                   requisitos, diseño, adr
 - Toda regla RN tiene al menos una prueba cuyo nombre cita su ID, por ejemplo `test('RN-02: el saldo nunca es negativo', ...)`.
 - Las pruebas de integración usan una base en memoria nueva por prueba, creada con las mismas migraciones de producción.
 
-**Comandos previstos** (se confirman al crear el proyecto):
-- `npx jest` corre todo.
+**Comandos:**
+- `npm test` corre todo.
 - `npx jest src/dominio/jornal.test.ts -t "RN-02"` corre una sola prueba.
+- `npm run typecheck` revisa los tipos.
 
 ## 7. Pendientes para confirmar con el cliente
 

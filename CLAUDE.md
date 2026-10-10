@@ -20,9 +20,34 @@ Controla a quién se le debe, pagos parciales y gastos.
 
 ## Estado del proyecto
 
-Aún no hay código. Los requisitos (v0.3) están cerrados con el cliente, y el proyecto está en la **fase 2 del SDLC (diseño)**, con borradores en `docs/diseno/` pendientes de validar con el cliente.
+Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso, sin pantallas). Siguen: 2 pantallas, 3 respaldo y notificaciones, 4 prueba en celular y APK. El diseño en `docs/diseno/` aún debe validarse con el cliente.
 
-Stack elegido: **React Native con Expo + `expo-sqlite`, en TypeScript**. Las reglas de negocio viven en `src/dominio/` (TypeScript puro) y se prueban con Jest en Node; la capa de datos se prueba con `better-sqlite3` detrás de la interfaz `BaseDatos`. Los comandos de build, lint y pruebas se agregan aquí al crear el proyecto.
+Stack: **Expo SDK 57 (React Native 0.86) + `expo-sqlite`, TypeScript 6**. Node y Git están instalados de forma portable en `%LOCALAPPDATA%\Programs` y agregados al PATH de usuario.
+
+## Comandos
+
+- `npm test`: todas las pruebas (Jest, proyecto `logica`, corre en Node).
+- `npx jest src/dominio/jornal.test.ts -t "RN-02"`: una sola prueba.
+- `npm run typecheck`: `tsc --noEmit`. Correrlo junto con las pruebas antes de dar algo por terminado.
+- `npx expo start`: servidor de desarrollo.
+- Para agregar paquetes de Expo o React Native usar `npx expo install <paquete>`, no `npm install`: elige la versión compatible con el SDK.
+
+## Arquitectura en breve
+
+Capas `src/app/` (rutas, aún no existe) → `src/casos-uso/` → `src/dominio/` + `src/datos/`. Detalle en `docs/diseno/arquitectura.md`.
+
+- Las reglas de negocio van en `src/dominio/` (TypeScript puro, sin React ni SQLite).
+- Toda escritura que toca varias tablas va en un caso de uso dentro de `db.transaccion(async (tx) => ...)`. Dentro, usar solo `tx`: usar `db` espera a que termine la transacción y la bloquea para siempre.
+- `BaseDatosSqlite` es la única implementación de la base. El celular (`adaptador-expo.ts`) y las pruebas (`adaptador-node.ts`, `better-sqlite3`) solo aportan la conexión. No usar `withExclusiveTransactionAsync` de expo-sqlite: abre otra conexión sin claves foráneas.
+- Cambios de esquema: agregar una migración nueva al final de `MIGRACIONES` en `src/datos/migraciones.ts`; nunca editar una ya publicada.
+- La fórmula del monto (`(cantidad_centesimas × tarifa + 50) / 100`) existe en `dominio/jornal.ts` y en el `CHECK` de la tabla `jornal`; deben coincidir.
+- Las pruebas de integración usan `escenario()` de `src/casos-uso/datos-de-prueba.ts` (base en memoria nueva y migrada). Cada prueba de una regla cita su ID en el nombre.
+
+## Expo
+
+- Expo cambia mucho entre versiones: antes de usar una API de Expo o React Native, revisar la documentación de la versión instalada (`https://docs.expo.dev/versions/v57.0.0/`) o los tipos en `node_modules`, no la memoria.
+- Las rutas de expo-router van en `src/app/`; el código que no es ruta va fuera de esa carpeta.
+- `android/` e `ios/` se generan (Continuous Native Generation): no crearlos ni editarlos a mano; configurar en `app.json` y plugins.
 
 Los IDs de requisitos (`RF-xx`, `RN-xx`, `RNF-xx`, `R-xx`, `P-xx`) son referencias estables: citarlos en diseños, comentarios y pruebas. Todo cambio a los requisitos se anota en su §11 (historial de cambios) con un aumento de versión.
 
