@@ -1,4 +1,4 @@
-import { listarCategorias, listarGastos, listarGastosDeActividad } from '../datos/gastos';
+import { listarCategorias, listarGastos, listarGastosDeActividad, obtenerGasto } from '../datos/gastos';
 import { listarJornalesDeActividad } from '../datos/jornales';
 import { costoDeActividad, resumenDePeriodo } from '../datos/resumenes';
 import { MontoInvalido, NoEncontrado, OperacionNoPermitida } from '../dominio/errores';
@@ -35,6 +35,8 @@ describe('RF-16 / RF-18: gastos', () => {
       ['Materiales', 25000, null],
     ]);
     expect(await listarGastosDeActividad(db, actividadId)).toHaveLength(1);
+    expect(await obtenerGasto(db, gastos[0].id)).toMatchObject({ categoria: 'Almuerzos', actividadId, monto: 1800 });
+    expect(await obtenerGasto(db, 999)).toBeNull();
   });
 
   test('valida monto, categoría y actividad', async () => {

@@ -1,5 +1,12 @@
-import { calcularMonto, calcularSaldo, estadoJornal, validarNuevoMonto } from './jornal';
+import { calcularMonto, calcularSaldo, estadoJornal, nombreUnidad, validarNuevoMonto } from './jornal';
 import { CantidadInvalida, MontoInvalido, MontoMenorQuePagado } from './errores';
+
+test('nombre de la unidad en singular o plural', () => {
+  expect(nombreUnidad('dia')).toBe('día');
+  expect(nombreUnidad('dia', 50)).toBe('días');
+  expect(nombreUnidad('hora', 300)).toBe('horas');
+  expect(nombreUnidad('tarea', 100)).toBe('tarea');
+});
 
 describe('RF-07: monto = cantidad × tarifa', () => {
   test.each([

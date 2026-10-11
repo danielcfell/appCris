@@ -53,6 +53,10 @@ export async function eliminarGasto(db: Consultas, id: number): Promise<number> 
   return r.cambios;
 }
 
+export async function obtenerGasto(db: Consultas, id: number): Promise<Gasto | null> {
+  return db.consultarUno<Gasto>(`${SELECT_GASTO} WHERE g.id = ?`, [id]);
+}
+
 export async function listarGastos(db: Consultas, desde: Fecha, hasta: Fecha): Promise<Gasto[]> {
   return db.consultar<Gasto>(`${SELECT_GASTO} WHERE g.fecha BETWEEN ? AND ? ORDER BY g.fecha DESC, g.id DESC`, [
     desde,

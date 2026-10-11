@@ -9,5 +9,12 @@ module.exports = {
       roots: ['<rootDir>/src'],
       testMatch: ['**/{dominio,datos,casos-uso}/**/*.test.ts'],
     },
+    {
+      // Pantallas con React Native Testing Library sobre la base en memoria (better-sqlite3).
+      displayName: 'ui',
+      preset: 'jest-expo',
+      roots: ['<rootDir>/src'],
+      testMatch: ['**/pruebas-ui/**/*.test.tsx'],
+    },
   ],
 };

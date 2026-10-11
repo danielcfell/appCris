@@ -4,6 +4,12 @@ import { type Centavos, type Centesimas, esCentavosValidos, formatearMonto } fro
 export type Unidad = 'dia' | 'tarea' | 'hora';
 export const UNIDADES: readonly Unidad[] = ['dia', 'tarea', 'hora'];
 
+/** "día"/"días", "hora"/"horas", "tarea"/"tareas" según la cantidad en centésimas. */
+export function nombreUnidad(unidad: Unidad, cantidad: Centesimas = 100): string {
+  const singular = { dia: 'día', tarea: 'tarea', hora: 'hora' }[unidad];
+  return cantidad === 100 ? singular : `${singular}s`;
+}
+
 export type EstadoJornal = 'pendiente' | 'parcial' | 'pagado';
 
 /**

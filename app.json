@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "jornales",
+    "name": "Jornales",
     "slug": "jornales",
+    "scheme": "jornales",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,7 +23,11 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-router",
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-asset"
     ]
   }
 }
