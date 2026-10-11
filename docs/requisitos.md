@@ -1,6 +1,6 @@
 # Documento de requisitos: App de control de jornales y gastos agrícolas
 
-**Versión:** 0.3 (requisitos cerrados con el cliente)
+**Versión:** 0.4 (requisitos cerrados con el cliente)
 **Fecha:** 2026-10-10
 **Estado:** Fase 1 del SDLC (Requisitos)
 
@@ -85,7 +85,7 @@ El cliente es un agricultor que contrata personal por jornadas (fumigación, des
 ### Datos
 - **RF-22** El usuario puede **exportar un respaldo** de todos los datos a un archivo y compartirlo (WhatsApp, Drive, correo).
 - **RF-23** El usuario puede **restaurar** desde ese archivo en el mismo u otro celular.
-- **RF-24** **Respaldo mensual** (decisión del cliente): la app recuerda hacer el respaldo cuando han pasado 30 días desde el último. El recordatorio se muestra al abrir la app y como notificación local (funciona sin internet), y se repite hasta que el usuario guarde un respaldo. El usuario también puede hacerlo en cualquier momento.
+- **RF-24** **Respaldo mensual** (decisión del cliente): la app recuerda hacer el respaldo cuando han pasado 30 días desde el último. El recordatorio es **solo una notificación local** (funciona sin internet), sin avisos dentro de la app (decisión del cliente: el aviso en pantalla le resulta molesto), y se repite hasta que el usuario guarde un respaldo. El usuario también puede hacerlo en cualquier momento.
 - **RF-25** La app muestra la fecha del último respaldo realizado.
 
 ## 6. Reglas de negocio
@@ -153,3 +153,4 @@ TipoTarea 1──* Actividad
 | 0.1 | 2026-10-10 | Primer borrador tras entrevista con el cliente |
 | 0.2 | 2026-10-10 | Resueltas P-01 a P-04: tractor como trabajador, Android, tarifas estables, sin historial para terceros. Pendiente P-05 (respaldo) |
 | 0.3 | 2026-10-10 | Resuelta P-05: respaldo mensual con recordatorio (RF-24, RF-25). Sin preguntas abiertas |
+| 0.4 | 2026-10-10 | RF-24: el recordatorio de respaldo es solo una notificación local; se quita el aviso al abrir la app |

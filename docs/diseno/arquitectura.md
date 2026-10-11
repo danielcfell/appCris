@@ -3,7 +3,7 @@
 **Versión:** 0.1 (borrador)
 **Fecha:** 2026-10-10
 **Estado:** Fase 2 del SDLC (Diseño)
-**Basado en:** `docs/requisitos.md` v0.3
+**Basado en:** `docs/requisitos.md` v0.4
 
 ---
 
@@ -149,7 +149,7 @@ CREATE TABLE config (
   clave TEXT PRIMARY KEY,
   valor TEXT NOT NULL
 );
--- Claves: ultimo_respaldo_en
+-- Claves: ultimo_respaldo_en, instalado_en
 
 CREATE VIEW v_jornal_saldo AS
 SELECT j.*,
@@ -213,8 +213,10 @@ CREATE INDEX ix_gasto_fecha       ON gasto(fecha);
 Si algo falla, no cambia nada.
 
 **Recordatorio (RF-24, RF-25):**
-- **Al abrir la app:** si pasaron 30 días o más desde `ultimo_respaldo_en` (o desde la instalación, si nunca hubo respaldo), se muestra un aviso fijo en "A quién debo" con el botón "Respaldar ahora".
-- **Notificación local:** al guardar un respaldo se cancelan las notificaciones previas y se programan notificaciones con fecha para los días 30 a 60 (una diaria). Así "se repite hasta que guarde" aunque la app no se abra. Al abrir la app también se reprograma, por si el sistema las descartó.
+- **Solo notificación local** (requisitos v0.4): no hay aviso dentro de la app; al cliente le resulta molesto.
+- Al guardar un respaldo se cancelan las notificaciones previas y se programan notificaciones con fecha para los días 30 a 60 desde `ultimo_respaldo_en` (una diaria). Así "se repite hasta que guarde" aunque la app no se abra. Al abrir la app también se reprograman, por si el sistema las descartó.
+- Si nunca hubo respaldo, se cuenta desde la primera vez que se abrió la app (clave `instalado_en` en `config`, que se guarda en esa primera apertura).
+- Tocar la notificación abre la pantalla Más › Respaldo.
 - Android 13 o superior requiere el permiso `POST_NOTIFICATIONS`. Se pide la primera vez que se guarda un respaldo, con una explicación previa.
 - La pantalla de respaldo muestra la fecha del último respaldo (RF-25).
 
@@ -248,10 +250,10 @@ docs/                   requisitos, diseño, adr
 - `npx jest src/dominio/jornal.test.ts -t "RN-02"` corre una sola prueba.
 - `npm run typecheck` revisa los tipos.
 
-## 7. Pendientes para confirmar con el cliente
+## 7. Confirmado con el cliente (2026-10-10)
 
-- **Formato de dinero.** Se asume `$20,50` (coma decimal, `es-EC`). Confirmar si prefiere `$20.50`.
-- **Ajustar un monto individual.** Confirmar que el cliente acepta hacerlo cambiando la tarifa o la cantidad de ese trabajador (ver §3).
+- **Formato de dinero.** Coma decimal: `$20,50` (`es-EC`).
+- **Ajustar un monto individual.** Se hace cambiando la tarifa o la cantidad de ese trabajador (ver §3).
 
 ## 8. Trazabilidad
 

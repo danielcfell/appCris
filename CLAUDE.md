@@ -20,7 +20,7 @@ Controla a quién se le debe, pagos parciales y gastos.
 
 ## Estado del proyecto
 
-Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso, sin pantallas). Siguen: 2 pantallas, 3 respaldo y notificaciones, 4 prueba en celular y APK. El diseño en `docs/diseno/` aún debe validarse con el cliente.
+Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso, sin pantallas). Siguen: 2 pantallas, 3 respaldo y notificaciones, 4 prueba en celular y APK. Las preguntas de diseño quedaron confirmadas con el cliente el 2026-10-10.
 
 Stack: **Expo SDK 57 (React Native 0.86) + `expo-sqlite`, TypeScript 6**. Node y Git están instalados de forma portable en `%LOCALAPPDATA%\Programs` y agregados al PATH de usuario.
 
@@ -68,7 +68,7 @@ TipoTarea 1──* Actividad                   (futuro) Terreno 1──* Activid
 - Las escrituras que tocan varias tablas son atómicas; por ejemplo, crear una actividad con N jornales se guarda completa o no se guarda (RNF-03).
 - Un trabajador con historial se desactiva, nunca se elimina (RN-05, RF-02).
 - Un servicio por horas, como un tractor, es un **Trabajador** con jornal por hora, no un gasto (RF-19).
-- Offline primero y datos solo en el dispositivo. Lo único que sale del celular es el respaldo que el usuario exporta (RNF-01, RNF-09). Respaldo y restauración van por un archivo compartible, con recordatorio a los 30 días en la app y como notificación local (RF-22 a RF-25).
+- Offline primero y datos solo en el dispositivo. Lo único que sale del celular es el respaldo que el usuario exporta (RNF-01, RNF-09). Respaldo y restauración van por un archivo compartible, con recordatorio a los 30 días solo como notificación local, sin aviso dentro de la app (RF-22 a RF-25).
 - El modelo de datos debe poder incorporar **terreno/cultivo** e **ingresos** sin reescribir lo existente, pero ninguno entra en el MVP (RNF-07, §3.2).
 - Las reglas RN-01 a RN-05 y los cálculos de saldos requieren pruebas automatizadas (RNF-08).
 - Interfaz para uso en campo: botones grandes, pocos pasos, legible con luz solar. Registrar una actividad con 5 trabajadores debería tomar ~1 minuto o menos (RNF-05).

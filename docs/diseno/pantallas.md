@@ -3,7 +3,7 @@
 **Versión:** 0.1 (borrador para validar con el cliente)
 **Fecha:** 2026-10-10
 **Estado:** Fase 2 del SDLC (Diseño)
-**Basado en:** `docs/requisitos.md` v0.3
+**Basado en:** `docs/requisitos.md` v0.4
 
 ---
 
@@ -43,13 +43,10 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 
 ## 3. Pantallas
 
-### 3.1 A quién debo (inicio) — RF-13, RF-15, RF-24
+### 3.1 A quién debo (inicio) — RF-13, RF-15
 
 ```
 ┌─────────────────────────────────┐
-│ ⚠ Hace 34 días que no respaldas │
-│          [ Respaldar ahora ]     │
-├─────────────────────────────────┤
 │  TOTAL QUE DEBO                 │
 │        $ 245,00                 │
 ├─────────────────────────────────┤
@@ -67,7 +64,7 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 ```
 
 - Solo muestra trabajadores con saldo mayor que 0, ordenados de mayor a menor saldo.
-- El aviso de respaldo solo aparece si pasaron 30 días o más.
+- No muestra avisos de respaldo: el recordatorio es solo una notificación (RF-24, requisitos v0.4).
 - Sin deudas, se muestra el mensaje "No le debes a nadie".
 
 ### 3.2 Detalle de trabajador — RF-14, RF-11
@@ -320,19 +317,19 @@ Para un pago parcial: tocar al trabajador, **Pagar** en el jornal, escribir el m
 
 | # | Acción | Toques |
 |---|---|---|
-| 1 | **Respaldar ahora** en el aviso (o tocar la notificación) | 1 |
+| 1 | Tocar la notificación (abre Más › Respaldo) y **Guardar respaldo ahora** | 2 |
 | 2 | Elegir WhatsApp / Drive / correo en la hoja de compartir | 1 |
 | 3 | Enviar (por ejemplo, a sí mismo en WhatsApp) | 1–2 |
 | 4 | De vuelta en la app: "¿Guardaste el respaldo?" → **Sí** | 1 |
-|   | **Total** | **4–5 toques** |
+|   | **Total** | **5–6 toques** |
 
 ## 5. Preguntas para la sesión con el cliente
 
-1. ¿Los nombres de las pestañas (Debo, Actividades, Gastos, Resumen, Más) se entienden?
-2. ¿Prefiere ver los montos como `$20,50` o como `$20.50`?
-3. Para pagarle más a un trabajador en una jornada, ¿le resulta natural cambiar su tarifa en la pantalla de revisión?
-4. En el resumen, ¿la mano de obra debe contar lo trabajado en el período (propuesta actual) o lo pagado en el período?
-5. ¿El aviso de respaldo en la pantalla de inicio le resulta molesto o útil?
+1. ~~¿Los nombres de las pestañas (Debo, Actividades, Gastos, Resumen, Más) se entienden?~~ Confirmado (2026-10-10): sí.
+2. ~~¿Prefiere ver los montos como `$20,50` o como `$20.50`?~~ Confirmado (2026-10-10): `$20,50`.
+3. ~~Para pagarle más a un trabajador en una jornada, ¿le resulta natural cambiar su tarifa en la pantalla de revisión?~~ Confirmado (2026-10-10): sí.
+4. ~~En el resumen, ¿la mano de obra debe contar lo trabajado en el período (propuesta actual) o lo pagado en el período?~~ Confirmado (2026-10-10): lo trabajado (devengado).
+5. ~~¿El aviso de respaldo en la pantalla de inicio le resulta molesto o útil?~~ Confirmado (2026-10-10): molesto. Se quita; queda solo la notificación (RF-24, requisitos v0.4).
 
 ## 6. Trazabilidad
 
@@ -350,5 +347,5 @@ Para un pago parcial: tocar al trabajador, **Pagar** en el jornal, escribir el m
 | RF-16 a RF-18 | 3.6 Gastos; "+ Agregar gasto" en 3.5 |
 | RF-20 | 3.7 Resumen |
 | RF-21 | 3.5 Detalle de actividad |
-| RF-22 a RF-25 | 3.8 Respaldo; aviso en 3.1 |
+| RF-22 a RF-25 | 3.8 Respaldo; notificación local (sin aviso en pantalla) |
 | RNF-05 | §1 y §4 |
