@@ -20,21 +20,22 @@ Controla a quién se le debe, pagos parciales y gastos.
 
 ## Estado del proyecto
 
-Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso, sin pantallas). Siguen: 2 pantallas, 3 respaldo y notificaciones, 4 prueba en celular y APK. Las preguntas de diseño quedaron confirmadas con el cliente el 2026-10-10.
+Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso) e incremento 2 (pantallas; Más › Respaldo es un marcador). Siguen: 3 respaldo y notificaciones, 4 prueba en celular y APK. Las preguntas de diseño quedaron confirmadas con el cliente el 2026-10-10.
 
 Stack: **Expo SDK 57 (React Native 0.86) + `expo-sqlite`, TypeScript 6**. Node y Git están instalados de forma portable en `%LOCALAPPDATA%\Programs` y agregados al PATH de usuario.
 
 ## Comandos
 
-- `npm test`: todas las pruebas (Jest, proyecto `logica`, corre en Node).
-- `npx jest src/dominio/jornal.test.ts -t "RN-02"`: una sola prueba.
+- `npm test`: todas las pruebas. Proyectos de Jest: `logica` (dominio, datos, casos de uso; Node) y `ui` (pantallas en `src/pruebas-ui/`).
+- `npx jest src/dominio/jornal.test.ts -t "RN-02"`: una sola prueba. `npx jest --selectProjects ui`: solo pantallas.
+- `npx expo export --platform android --output-dir <carpeta temporal>`: confirma que Metro empaqueta la app (Jest no lo comprueba).
 - `npm run typecheck`: `tsc --noEmit`. Correrlo junto con las pruebas antes de dar algo por terminado.
 - `npx expo start`: servidor de desarrollo.
 - Para agregar paquetes de Expo o React Native usar `npx expo install <paquete>`, no `npm install`: elige la versión compatible con el SDK.
 
 ## Arquitectura en breve
 
-Capas `src/app/` (rutas, aún no existe) → `src/casos-uso/` → `src/dominio/` + `src/datos/`. Detalle en `docs/diseno/arquitectura.md`.
+Capas `src/app/` (rutas) + `src/ui/` (componentes) → `src/casos-uso/` → `src/dominio/` + `src/datos/`. Detalle en `docs/diseno/arquitectura.md`.
 
 - Las reglas de negocio van en `src/dominio/` (TypeScript puro, sin React ni SQLite).
 - Toda escritura que toca varias tablas va en un caso de uso dentro de `db.transaccion(async (tx) => ...)`. Dentro, usar solo `tx`: usar `db` espera a que termine la transacción y la bloquea para siempre.
@@ -42,11 +43,14 @@ Capas `src/app/` (rutas, aún no existe) → `src/casos-uso/` → `src/dominio/`
 - Cambios de esquema: agregar una migración nueva al final de `MIGRACIONES` en `src/datos/migraciones.ts`; nunca editar una ya publicada.
 - La fórmula del monto (`(cantidad_centesimas × tarifa + 50) / 100`) existe en `dominio/jornal.ts` y en el `CHECK` de la tabla `jornal`; deben coincidir.
 - Las pruebas de integración usan `escenario()` de `src/casos-uso/datos-de-prueba.ts` (base en memoria nueva y migrada). Cada prueba de una regla cita su ID en el nombre.
+- Pantallas: leen con `useConsulta` y escriben con `useAccion` (`src/ui/datos-context.tsx`), que sube `version` para que todo se vuelva a consultar (RF-15). Sin reglas de negocio en las pantallas: usar las funciones de `src/dominio/`. Prellenar campos con `montoEditable`/`cantidadEditable` (sin separador de miles).
+- Pruebas de pantallas: `abrirApp(ruta, escenario)` de `src/pruebas-ui/app-de-prueba.tsx`. En RNTL 14 `fireEvent` y `render` son asíncronos: siempre `await`. Si la prueba navega al final (guardar → volver), esperar la ruta con `waitFor(() => expect(app.getPathname())...)`.
 
 ## Expo
 
 - Expo cambia mucho entre versiones: antes de usar una API de Expo o React Native, revisar la documentación de la versión instalada (`https://docs.expo.dev/versions/v57.0.0/`) o los tipos en `node_modules`, no la memoria.
 - Las rutas de expo-router van en `src/app/`; el código que no es ruta va fuera de esa carpeta.
+- En expo-router 57: `Stack` se importa de `expo-router/stack` y `Tabs` de `expo-router/js-tabs` (no de `expo-router`). Sin rutas tipadas: los `href` son texto.
 - `android/` e `ios/` se generan (Continuous Native Generation): no crearlos ni editarlos a mano; configurar en `app.json` y plugins.
 
 Los IDs de requisitos (`RF-xx`, `RN-xx`, `RNF-xx`, `R-xx`, `P-xx`) son referencias estables: citarlos en diseños, comentarios y pruebas. Todo cambio a los requisitos se anota en su §11 (historial de cambios) con un aumento de versión.

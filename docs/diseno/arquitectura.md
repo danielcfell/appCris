@@ -228,7 +228,9 @@ src/app/                rutas de expo-router (convención de Expo SDK 57): (tabs
 src/dominio/            dinero.ts, fecha.ts, jornal.ts, pago.ts, errores.ts (+ *.test.ts)
 src/datos/              base-datos.ts, adaptador-expo.ts, adaptador-node.ts, migraciones.ts, repositorios
 src/casos-uso/          casos de uso por entidad (+ *.test.ts de integración, datos-de-prueba.ts)
-src/ui/                 componentes (BotonGrande, MontoInput, TarjetaTrabajador...)
+src/ui/                 componentes (BotonGrande, CampoMonto, JornalFila...), tema, DatosContext,
+                        borrador del asistente de nueva actividad
+src/pruebas-ui/         pruebas de pantallas (renderRouter sobre la base en memoria)
 docs/                   requisitos, diseño, adr
 ```
 
@@ -238,7 +240,7 @@ docs/                   requisitos, diseño, adr
 |---|---|---|---|
 | Unitarias | Jest | `src/dominio/`: RN-01 a RN-05, cálculo de montos con redondeo (0,5 h × $15 = $7,50; 1/3 de día), parseo de dinero ("20", "20,5", "20,50", "-1", "20,505"), estados, pago excedido | Node |
 | Integración | Jest + `better-sqlite3` | Migraciones desde cero; repositorios; casos de uso; atomicidad (un jornal inválido en una actividad de 5 no deja nada guardado); disparadores de RN-02; "pagar todo"; resúmenes por período; ida y vuelta exportar → restaurar con datos idénticos | Node |
-| UI | React Native Testing Library (`jest-expo`) | Nueva actividad con 5 trabajadores; registrar pago parcial y ver el estado cambiar; el pago excedido muestra un error | Node |
+| UI | React Native Testing Library (`jest-expo`) + `renderRouter` de expo-router | Nueva actividad con 5 trabajadores (10 toques, flujo 4.1); registrar pago parcial y ver el estado cambiar; el pago excedido muestra un error; catálogos, actividades, gastos y resumen | Node |
 | Manual | Celular Android real | Instalación, uso sin internet, cierre forzado durante un guardado (RNF-04), llegada de la notificación, compartir por WhatsApp/Drive, restaurar en otro celular, lectura con luz solar | Dispositivo (R-03) |
 
 **Reglas:**
