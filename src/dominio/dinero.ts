@@ -50,6 +50,19 @@ export function formatearMonto(centavos: Centavos): string {
   return `$${formatearCentesimas(centavos, true)}`;
 }
 
+/** Texto para prellenar un campo: sin "$" ni separador de miles, así `parsearMonto` lo acepta. 2050 → "20,50" */
+export function montoEditable(centavos: Centavos): string {
+  if (!esCentavosValidos(centavos)) throw new MontoInvalido();
+  return `${Math.floor(centavos / 100)},${(centavos % 100).toString().padStart(2, '0')}`;
+}
+
+/** 100 → "1", 50 → "0,5", 125 → "1,25" */
+export function cantidadEditable(centesimas: Centesimas): string {
+  if (!Number.isSafeInteger(centesimas) || centesimas <= 0) throw new CantidadInvalida();
+  const decimales = (centesimas % 100).toString().padStart(2, '0').replace(/0+$/, '');
+  return decimales ? `${Math.floor(centesimas / 100)},${decimales}` : `${Math.floor(centesimas / 100)}`;
+}
+
 export function formatearCantidad(centesimas: Centesimas): string {
   if (!Number.isSafeInteger(centesimas) || centesimas <= 0) throw new CantidadInvalida();
   return formatearCentesimas(centesimas, false);

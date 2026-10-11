@@ -3,6 +3,7 @@ export { CampoCantidad, CampoFecha, CampoMonto, CampoTexto } from './campos';
 export { Chips, type OpcionChip } from './chips';
 export { confirmar } from './confirmar';
 export { DatosProvider, hoy, mensajeDeError, useAccion, useConsulta, useDatos } from './datos-context';
+export { idDeRuta, leerCampo, volver } from './formularios';
 export { EtiquetaEstado, Fila, MensajeError, Seccion, Tarjeta, Vacio } from './listas';
 export { Cargando, Pantalla } from './pantalla';
 export { colores, medidas, tamanos } from './tema';

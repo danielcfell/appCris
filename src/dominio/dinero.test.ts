@@ -1,4 +1,11 @@
-import { formatearCantidad, formatearMonto, parsearCantidad, parsearMonto } from './dinero';
+import {
+  cantidadEditable,
+  formatearCantidad,
+  formatearMonto,
+  montoEditable,
+  parsearCantidad,
+  parsearMonto,
+} from './dinero';
 import { CantidadInvalida, MontoInvalido } from './errores';
 
 describe('RNF-02: dinero en centavos enteros', () => {
@@ -61,5 +68,26 @@ describe('cantidades en centésimas', () => {
     [125, '1,25'],
   ])('formatearCantidad(%p) = %p', (centesimas, esperado) => {
     expect(formatearCantidad(centesimas)).toBe(esperado);
+  });
+});
+
+describe('texto editable para prellenar campos', () => {
+  test.each([0, 5, 2050, 123450, 100000000])('montoEditable(%p) vuelve a parsearse igual', (centavos) => {
+    expect(parsearMonto(montoEditable(centavos))).toBe(centavos);
+  });
+
+  test('montoEditable no usa separador de miles', () => {
+    expect(montoEditable(123450)).toBe('1234,50');
+    expect(montoEditable(2000)).toBe('20,00');
+  });
+
+  test.each([
+    [100, '1'],
+    [50, '0,5'],
+    [125, '1,25'],
+    [100050, '1000,5'],
+  ])('cantidadEditable(%p) = %p', (centesimas, esperado) => {
+    expect(cantidadEditable(centesimas)).toBe(esperado);
+    expect(parsearCantidad(esperado)).toBe(centesimas);
   });
 });
