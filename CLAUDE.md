@@ -20,7 +20,7 @@ Controla a quién se le debe, pagos parciales y gastos.
 
 ## Estado del proyecto
 
-Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso) e incremento 2 (pantallas; Más › Respaldo es un marcador). Siguen: 3 respaldo y notificaciones, 4 prueba en celular y APK. Las preguntas de diseño quedaron confirmadas con el cliente el 2026-10-10.
+Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso), incremento 2 (pantallas) e incremento 3 (respaldo y recordatorio). Sigue: 4 prueba en celular y APK. Las preguntas de diseño quedaron confirmadas con el cliente el 2026-10-10.
 
 Stack: **Expo SDK 57 (React Native 0.86) + `expo-sqlite`, TypeScript 6**. Node y Git están instalados de forma portable en `%LOCALAPPDATA%\Programs` y agregados al PATH de usuario.
 
@@ -44,6 +44,7 @@ Capas `src/app/` (rutas) + `src/ui/` (componentes) → `src/casos-uso/` → `src
 - La fórmula del monto (`(cantidad_centesimas × tarifa + 50) / 100`) existe en `dominio/jornal.ts` y en el `CHECK` de la tabla `jornal`; deben coincidir.
 - Las pruebas de integración usan `escenario()` de `src/casos-uso/datos-de-prueba.ts` (base en memoria nueva y migrada). Cada prueba de una regla cita su ID en el nombre.
 - Pantallas: leen con `useConsulta` y escriben con `useAccion` (`src/ui/datos-context.tsx`), que sube `version` para que todo se vuelva a consultar (RF-15). Sin reglas de negocio en las pantallas: usar las funciones de `src/dominio/`. Prellenar campos con `montoEditable`/`cantidadEditable` (sin separador de miles).
+- Módulos nativos (archivos, compartir, notificaciones) solo se usan desde `src/plataforma/`. En las pruebas de pantallas están simulados para todas (`src/pruebas-ui/simular-plataforma.ts`); cambiar su respuesta con `jest.mocked(...)`.
 - Pruebas de pantallas: `abrirApp(ruta, escenario)` de `src/pruebas-ui/app-de-prueba.tsx`. En RNTL 14 `fireEvent` y `render` son asíncronos: siempre `await`. Si la prueba navega al final (guardar → volver), esperar la ruta con `waitFor(() => expect(app.getPathname())...)`.
 
 ## Expo

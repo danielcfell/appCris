@@ -58,3 +58,9 @@ export class OperacionNoPermitida extends ErrorDominio {
     super('OPERACION_NO_PERMITIDA', mensaje);
   }
 }
+
+export class RespaldoInvalido extends ErrorDominio {
+  constructor(mensaje = 'El archivo no es un respaldo de esta app.') {
+    super('RESPALDO_INVALIDO', mensaje);
+  }
+}

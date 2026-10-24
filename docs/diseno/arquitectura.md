@@ -197,6 +197,8 @@ CREATE INDEX ix_gasto_fecha       ON gasto(fecha);
 }
 ```
 
+Las columnas de cada tabla están en `TABLAS_RESPALDO` (`src/dominio/respaldo.ts`). `config` no se respalda: guarda datos de ese celular (`ultimo_respaldo_en`, `instalado_en`) y restaurar no la toca.
+
 **Exportar (RF-22):**
 1. Leer todas las tablas en una transacción de lectura.
 2. Escribir el archivo en la caché de la app.
@@ -207,14 +209,16 @@ CREATE INDEX ix_gasto_fecha       ON gasto(fecha);
 1. Elegir el archivo.
 2. Validar `formato`, `version_formato` y la estructura de cada tabla.
 3. Mostrar un resumen ("12 trabajadores, 85 jornales, respaldo del 3 de octubre") y pedir confirmación, avisando que reemplaza los datos actuales.
-4. Guardar automáticamente una copia del estado actual en el almacenamiento de la app.
-5. En una sola transacción: vaciar las tablas, insertar todo y aplicar las migraciones si `version_esquema` es menor que la actual.
+4. Guardar automáticamente una copia del estado actual en el almacenamiento de la app (`copia-antes-de-restaurar.json`; solo la última).
+5. En una sola transacción: vaciar las tablas e insertar todo. Las reglas de la base (`CHECK`, claves foráneas, disparadores de RN-02) validan los datos al insertarlos.
 
 Si algo falla, no cambia nada.
 
+**Versión del esquema.** Un respaldo de una versión más nueva que la app se rechaza con el mensaje "Actualiza la app para restaurarlo". Mientras exista una sola versión del esquema, un respaldo anterior no puede darse; cuando se agregue la migración 2, `validarRespaldo` deberá aceptar versiones anteriores y la restauración convertirlas aplicándoles las migraciones que les faltan, con su prueba.
+
 **Recordatorio (RF-24, RF-25):**
 - **Solo notificación local** (requisitos v0.4): no hay aviso dentro de la app; al cliente le resulta molesto.
-- Al guardar un respaldo se cancelan las notificaciones previas y se programan notificaciones con fecha para los días 30 a 60 desde `ultimo_respaldo_en` (una diaria). Así "se repite hasta que guarde" aunque la app no se abra. Al abrir la app también se reprograman, por si el sistema las descartó.
+- Al guardar un respaldo se cancelan las notificaciones previas y se programan 31 notificaciones con fecha, una diaria a las 9:00, desde el día 30 después de `ultimo_respaldo_en`. Así "se repite hasta que guarde" aunque la app no se abra. Al abrir la app también se reprograman, por si el sistema las descartó; si ya pasaron los 30 días, la serie empieza ese día, de modo que nunca se agota mientras el usuario siga usando la app.
 - Si nunca hubo respaldo, se cuenta desde la primera vez que se abrió la app (clave `instalado_en` en `config`, que se guarda en esa primera apertura).
 - Tocar la notificación abre la pantalla Más › Respaldo.
 - Android 13 o superior requiere el permiso `POST_NOTIFICATIONS`. Se pide la primera vez que se guarda un respaldo, con una explicación previa.
@@ -228,6 +232,8 @@ src/app/                rutas de expo-router (convención de Expo SDK 57): (tabs
 src/dominio/            dinero.ts, fecha.ts, jornal.ts, pago.ts, errores.ts (+ *.test.ts)
 src/datos/              base-datos.ts, adaptador-expo.ts, adaptador-node.ts, migraciones.ts, repositorios
 src/casos-uso/          casos de uso por entidad (+ *.test.ts de integración, datos-de-prueba.ts)
+src/plataforma/         archivos, hoja de compartir y notificaciones (módulos nativos de Expo); en las
+                        pruebas de pantallas se simulan (pruebas-ui/simular-plataforma.ts)
 src/ui/                 componentes (BotonGrande, CampoMonto, JornalFila...), tema, DatosContext,
                         borrador del asistente de nueva actividad
 src/pruebas-ui/         pruebas de pantallas (renderRouter sobre la base en memoria)

@@ -15,6 +15,7 @@ module.exports = {
       preset: 'jest-expo',
       roots: ['<rootDir>/src'],
       testMatch: ['**/pruebas-ui/**/*.test.tsx'],
+      setupFilesAfterEnv: ['<rootDir>/src/pruebas-ui/simular-plataforma.ts'],
     },
   ],
 };

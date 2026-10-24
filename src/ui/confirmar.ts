@@ -4,14 +4,18 @@ import { Alert } from 'react-native';
 export function confirmar(
   titulo: string,
   mensaje: string,
-  { aceptar = 'Aceptar', destructivo = false }: { aceptar?: string; destructivo?: boolean } = {},
+  {
+    aceptar = 'Aceptar',
+    cancelar = 'Cancelar',
+    destructivo = false,
+  }: { aceptar?: string; cancelar?: string; destructivo?: boolean } = {},
 ): Promise<boolean> {
   return new Promise((resolve) => {
     Alert.alert(
       titulo,
       mensaje,
       [
-        { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+        { text: cancelar, style: 'cancel', onPress: () => resolve(false) },
         { text: aceptar, style: destructivo ? 'destructive' : 'default', onPress: () => resolve(true) },
       ],
       { cancelable: true, onDismiss: () => resolve(false) },

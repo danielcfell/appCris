@@ -1,4 +1,4 @@
-import type { BaseDatos } from './base-datos';
+import type { BaseDatos, Consultas } from './base-datos';
 
 /**
  * Migraciones en orden. La posición en la lista es la versión (1, 2, ...).
@@ -118,7 +118,7 @@ export const MIGRACIONES: readonly string[] = [
   `,
 ];
 
-export async function versionEsquema(db: BaseDatos): Promise<number> {
+export async function versionEsquema(db: Consultas): Promise<number> {
   const fila = await db.consultarUno<{ user_version: number }>('PRAGMA user_version');
   return fila?.user_version ?? 0;
 }
