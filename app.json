@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.appcris.jornales",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -30,7 +31,8 @@
       "expo-font",
       "expo-asset",
       "expo-sharing",
-      "expo-notifications"
+      ["expo-notifications", { "icon": "./assets/android-icon-monochrome.png", "color": "#1B5E20" }],
+      "./plugins/firma-android"
     ]
   }
 }
