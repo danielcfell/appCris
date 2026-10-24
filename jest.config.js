@@ -1,5 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
+  // Con un proceso por núcleo, Jest llevaba el CPU de la PC de desarrollo al 90 %.
+  maxWorkers: 2,
   projects: [
     {
       // Reglas de negocio, datos y casos de uso: corren en Node, sin React Native.
