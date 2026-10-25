@@ -65,13 +65,13 @@ Las pruebas automáticas (`npm test`) cubren las reglas, los datos y las pantall
 
 ## 6. Recordatorio (RF-24)
 
-El recordatorio sale a los 30 días. Para probarlo sin esperar, adelantar la fecha del celular:
+El primer recordatorio sale el día 30 después del último respaldo. Para probarlo sin esperar, adelantar la fecha del celular. Android trata la alarma como inexacta: llega entre las 9:00 y las 10:00, no a las 9:00 en punto.
 
 | # | Paso | Esperado | Resultado |
 |---|---|---|---|
-| 6.1 | Ajustes › Fecha y hora: desactivar la hora automática y poner la fecha de **31 días después** del último respaldo, 8:59 | A las 9:00 llega "Es hora de guardar el respaldo" | |
+| 6.1 | Ajustes › Fecha y hora: desactivar la hora automática y poner la fecha de **30 días después** del último respaldo, 8:59 | Entre las 9:00 y las 10:00 llega "Es hora de guardar el respaldo" | |
 | 6.2 | No abrir la app y adelantar un día más | Llega otra vez (se repite) | |
-| 6.3 | Tocar la notificación | Abre Más › Respaldo | |
+| 6.3 | Expandir el grupo de notificaciones y tocar **un** recordatorio | Abre Más › Respaldo. Tocar el grupo contraído solo abre la app en "A quién debo" (lo hace Android) | |
 | 6.4 | Guardar respaldo › Sí; adelantar 1 día | Ya no llega | |
 | 6.5 | Volver a la hora automática | — | |
 
@@ -87,3 +87,27 @@ El recordatorio sale a los 30 días. Para probarlo sin esperar, adelantar la fec
 | # | Paso | Esperado | Resultado |
 |---|---|---|---|
 | 8.1 | Instalar encima un APK nuevo (mayor `versionCode`, misma clave) | Se actualiza sin desinstalar y conserva los datos | |
+
+## Resultados en emulador (2026-10-24)
+
+**Emulador:** `Liviano_API_33` (Pixel 4, Android 13) · APK de release 1.0.0 (`versionCode` 1), firmado con la clave propia · zona horaria `America/Guayaquil`. Se recorrió con `adb` (toques por texto de la pantalla). Para la sección 5 se copió el respaldo de la caché de la app a Descargas con `adb root`, porque el emulador no tiene WhatsApp ni cuenta de Google.
+
+| Sección | Resultado | Nota |
+|---|---|---|
+| 0 | ✅ | Abre en "A quién debo" con $0,00 en menos de 1 s |
+| 1 | ✅ | Las secciones 2 y 3 se hicieron en modo avión |
+| 2.1–2.2 | ✅ | |
+| 2.3 | ✅ | 10 toques; el tiempo hay que medirlo con una persona en el celular |
+| 2.4–2.10 | ✅ | Total $100,00 → $145,00 con el tractor; pago parcial → PARCIAL; pago de $50 rechazado ("El pago no puede ser mayor a $15,00."); resumen del mes $157,50 = $145,00 + $12,50 |
+| 3.1–3.2 | ✅ | Tras el cierre forzado el gasto quedó completo; tras reiniciar no se perdió nada |
+| 4.1, 4.3, 4.4 | ✅ | Se piden explicación y permiso; quedan 31 recordatorios, uno diario a las 9:00, desde el día 30 |
+| 4.2, 4.5 | ⏳ | La hoja de compartir abre con `jornales-respaldo-AAAA-MM-DD.json`; el envío queda para el celular |
+| 5.1–5.4 | ✅ | Se guarda `copia-antes-de-restaurar.json` con los datos previos |
+| 5.5 | ⏳ | Requiere otro celular |
+| 6.1–6.5 | ✅ | Abre Respaldo desde la notificación con la app en segundo plano y también cerrada |
+| 7, 8 | ⏳ | Celular real; la 8 requiere un APK con `versionCode` 2 |
+
+**Observaciones (no son fallas):**
+- Con el teclado abierto, el botón Guardar del formulario de trabajador queda tapado; hay que cerrar el teclado para verlo. Revisar en el celular si molesta.
+- Si se deja abierta la pantalla de Respaldo y se vuelve días después, sigue diciendo "(hoy)" hasta que se vuelve a entrar.
+- El emulador vuelve a la zona GMT al reiniciarse. Si la app arranca en GMT y luego se cambia la zona, sigue usando GMT hasta que se cierra: los recordatorios quedan 5 horas antes. En un celular real la zona no cambia.
