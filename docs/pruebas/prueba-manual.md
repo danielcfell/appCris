@@ -105,7 +105,8 @@ El primer recordatorio sale el día 30 después del último respaldo. Para proba
 | 5.1–5.4 | ✅ | Se guarda `copia-antes-de-restaurar.json` con los datos previos |
 | 5.5 | ⏳ | Requiere otro celular |
 | 6.1–6.5 | ✅ | Abre Respaldo desde la notificación con la app en segundo plano y también cerrada |
-| 7, 8 | ⏳ | Celular real; la 8 requiere un APK con `versionCode` 2 |
+| 7 | ⏳ | Celular real |
+| 8.1 | ✅ | El APK 1.0.1 (`versionCode` 2) se instaló encima del 1.0.0 sin desinstalar; se conservaron los datos, el último respaldo, los recordatorios y el permiso de notificaciones |
 
 **Observaciones (no son fallas):**
 - Con el teclado abierto, el botón Guardar del formulario de trabajador queda tapado; hay que cerrar el teclado para verlo. Revisar en el celular si molesta.
