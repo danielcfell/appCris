@@ -9,6 +9,7 @@ import { insertarJornal, listarJornalesDeActividad } from '../datos/jornales';
 import { obtenerTipoTarea } from '../datos/tipos-tarea';
 import { obtenerTrabajador } from '../datos/trabajadores';
 import { marcaTiempo } from './comun';
+import { resolverCultivo } from './cultivos';
 
 /** Trabajador a agregar. Sin cantidad o tarifa propias, toma las comunes (RF-06). */
 export interface TrabajadorEnActividad {
@@ -29,6 +30,8 @@ export interface DatosActividad extends JornalesNuevos {
   /** Si queda vacía se usa el nombre del tipo de tarea. */
   descripcion: string;
   tipoTareaId: number;
+  /** Obligatorio si ya hay cultivos en el catálogo (RF-27). */
+  cultivoId?: number | null;
 }
 
 async function insertarJornales(
@@ -68,11 +71,12 @@ export async function crearActividadConJornales(db: BaseDatos, datos: DatosActiv
   return db.transaccion(async (tx) => {
     const tipo = await obtenerTipoTarea(tx, datos.tipoTareaId);
     if (!tipo) throw new NoEncontrado('el tipo de tarea');
+    const cultivoId = await resolverCultivo(tx, datos.cultivoId);
     const creadoEn = marcaTiempo();
     const descripcion = datos.descripcion.trim() || tipo.nombre;
     const actividadId = await actividades.insertarActividad(
       tx,
-      { fecha, descripcion, tipoTareaId: tipo.id },
+      { fecha, descripcion, tipoTareaId: tipo.id, cultivoId },
       creadoEn,
     );
     await insertarJornales(tx, actividadId, tipo.unidad, datos, creadoEn);

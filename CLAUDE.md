@@ -20,7 +20,7 @@ Controla a quién se le debe, pagos parciales y gastos.
 
 ## Estado del proyecto
 
-Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso), incremento 2 (pantallas) e incremento 3 (respaldo y recordatorio). Sigue: 4 prueba en celular y APK. Las preguntas de diseño quedaron confirmadas con el cliente el 2026-10-10.
+Fase 3 del SDLC (implementación), por incrementos. Hecho: incremento 1 (dominio, datos y casos de uso), incremento 2 (pantallas), incremento 3 (respaldo y recordatorio) e incremento 4 (cuentas por cultivo). Sigue: prueba en celular y APK. Las preguntas de diseño quedaron confirmadas con el cliente el 2026-10-10; la separación de cuentas el 2026-10-30 y su definición por cultivo (no por terreno) el 2026-11-04.
 
 Stack: **Expo SDK 57 (React Native 0.86) + `expo-sqlite`, TypeScript 6**. Node y Git están instalados de forma portable en `%LOCALAPPDATA%\Programs` y agregados al PATH de usuario.
 
@@ -44,6 +44,7 @@ Capas `src/app/` (rutas) + `src/ui/` (componentes) → `src/casos-uso/` → `src
 - La fórmula del monto (`(cantidad_centesimas × tarifa + 50) / 100`) existe en `dominio/jornal.ts` y en el `CHECK` de la tabla `jornal`; deben coincidir.
 - Las pruebas de integración usan `escenario()` de `src/casos-uso/datos-de-prueba.ts` (base en memoria nueva y migrada). Cada prueba de una regla cita su ID en el nombre.
 - Pantallas: leen con `useConsulta` y escriben con `useAccion` (`src/ui/datos-context.tsx`), que sube `version` para que todo se vuelva a consultar (RF-15). Sin reglas de negocio en las pantallas: usar las funciones de `src/dominio/`. Prellenar campos con `montoEditable`/`cantidadEditable` (sin separador de miles).
+- El cultivo que se está viendo (`filtroCultivo`: `undefined` = todos, `null` = sin cultivo, número = ese cultivo) vive en `DatosContext` y lo comparten las pestañas. Las consultas lo reciben como último parámetro y lo aplican con `clausulaCultivo` (`src/datos/filtro-cultivo.ts`).
 - Módulos nativos (archivos, compartir, notificaciones) solo se usan desde `src/plataforma/`. En las pruebas de pantallas están simulados para todas (`src/pruebas-ui/simular-plataforma.ts`); cambiar su respuesta con `jest.mocked(...)`.
 - Pruebas de pantallas: `abrirApp(ruta, escenario)` de `src/pruebas-ui/app-de-prueba.tsx`. En RNTL 14 `fireEvent` y `render` son asíncronos: siempre `await`. Si la prueba navega al final (guardar → volver), esperar la ruta con `waitFor(() => expect(app.getPathname())...)`.
 
@@ -58,12 +59,12 @@ Los IDs de requisitos (`RF-xx`, `RN-xx`, `RNF-xx`, `R-xx`, `P-xx`) son referenci
 
 ## Dominio
 
-Usar los nombres en español en el código y la interfaz: *Trabajador*, *Actividad*, *Jornal*, *TipoTarea*, *Pago*, *Gasto*, *Categoría*. La pantalla central es "A quién debo" (RF-13).
+Usar los nombres en español en el código y la interfaz: *Trabajador*, *Actividad*, *Jornal*, *TipoTarea*, *Pago*, *Gasto*, *Categoría*, *Cultivo* (cada siembra). La pantalla central es "A quién debo" (RF-13).
 
 ```
 Trabajador 1──* Jornal *──1 Actividad      Jornal 1──* Pago
 Actividad 1──* Gasto (opcional)            Categoría 1──* Gasto
-TipoTarea 1──* Actividad                   (futuro) Terreno 1──* Actividad / Gasto
+TipoTarea 1──* Actividad                   Cultivo 1──* Actividad / Gasto
 ```
 
 ## Invariantes que toda implementación debe respetar
@@ -74,8 +75,8 @@ TipoTarea 1──* Actividad                   (futuro) Terreno 1──* Activid
 - Un trabajador con historial se desactiva, nunca se elimina (RN-05, RF-02).
 - Un servicio por horas, como un tractor, es un **Trabajador** con jornal por hora, no un gasto (RF-19).
 - Offline primero y datos solo en el dispositivo. Lo único que sale del celular es el respaldo que el usuario exporta (RNF-01, RNF-09). Respaldo y restauración van por un archivo compartible, con recordatorio a los 30 días solo como notificación local, sin aviso dentro de la app (RF-22 a RF-25).
-- El modelo de datos debe poder incorporar **terreno/cultivo** e **ingresos** sin reescribir lo existente, pero ninguno entra en el MVP (RNF-07, §3.2).
+- El modelo de datos debe poder incorporar **ingresos** sin reescribir lo existente (RNF-07, §3.2). La unidad de cuenta es el **Cultivo** (cada siembra, con su contabilidad aparte); el terreno no es un concepto de la app y, si hace falta, va en el nombre del cultivo (P-07). Un cultivo con historial se cierra, nunca se elimina (RN-05); un trabajador en varios cultivos es uno solo, con deuda y "Pagar todo" por cultivo (RF-29).
 - Las reglas RN-01 a RN-05 y los cálculos de saldos requieren pruebas automatizadas (RNF-08).
 - Interfaz para uso en campo: botones grandes, pocos pasos, legible con luz solar. Registrar una actividad con 5 trabajadores debería tomar ~1 minuto o menos (RNF-05).
 
-Fuera del MVP: ingresos, separación por terreno, multiusuario o sincronización, facturación electrónica o reportes al SRI.
+Fuera del MVP: ingresos, terreno como entidad, multiusuario o sincronización, facturación electrónica o reportes al SRI.

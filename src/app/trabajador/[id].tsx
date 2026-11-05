@@ -4,6 +4,7 @@ import { Stack } from 'expo-router/stack';
 import { Pressable } from 'react-native';
 import { pagarPendientesDeTrabajador } from '../../casos-uso/pagos';
 import { listarPendientesDeTrabajador } from '../../datos/jornales';
+import { obtenerCultivo } from '../../datos/cultivos';
 import { listarPagosDeTrabajador } from '../../datos/pagos';
 import { saldoDeTrabajador } from '../../datos/resumenes';
 import { obtenerTrabajador } from '../../datos/trabajadores';
@@ -25,26 +26,33 @@ import {
   Texto,
   useAccion,
   useConsulta,
+  useDatos,
   Vacio,
 } from '../../ui';
 
-/** Detalle de un trabajador: lo que se le debe, sus jornales pendientes y su historial de pagos (RF-14, RF-11). */
+/**
+ * Detalle de un trabajador: lo que se le debe, sus jornales pendientes y su historial de pagos (RF-14, RF-11).
+ * Si se está viendo un cultivo, todo se acota a ese cultivo, incluido "Pagar todo" (RF-29).
+ */
 export default function DetalleTrabajador() {
   const router = useRouter();
   const id = idDeRuta(useLocalSearchParams<{ id: string }>().id) ?? 0;
+  const { filtroCultivo } = useDatos();
   const { datos, error } = useConsulta(
     async (db) => ({
       trabajador: await obtenerTrabajador(db, id),
-      saldo: await saldoDeTrabajador(db, id),
-      pendientes: await listarPendientesDeTrabajador(db, id),
-      pagos: await listarPagosDeTrabajador(db, id),
+      saldo: await saldoDeTrabajador(db, id, filtroCultivo),
+      pendientes: await listarPendientesDeTrabajador(db, id, filtroCultivo),
+      pagos: await listarPagosDeTrabajador(db, id, filtroCultivo),
+      cultivo: typeof filtroCultivo === 'number' ? await obtenerCultivo(db, filtroCultivo) : null,
     }),
-    [id],
+    [id, filtroCultivo],
   );
   const { ejecutar, error: errorAccion, ocupado } = useAccion();
 
   if (!datos?.trabajador) return <Cargando error={error ?? (datos ? 'No se encontró el trabajador.' : null)} />;
-  const { trabajador, saldo, pendientes, pagos } = datos;
+  const { trabajador, saldo, pendientes, pagos, cultivo } = datos;
+  const nombreCultivo = filtroCultivo === null ? 'Sin cultivo' : (cultivo?.nombre ?? null);
 
   const pagarTodo = async () => {
     const n = pendientes.length;
@@ -53,7 +61,7 @@ export default function DetalleTrabajador() {
       `Registrar pago de ${formatearMonto(saldo)} a ${trabajador.nombre} (${n} ${n === 1 ? 'jornal' : 'jornales'}).`,
       { aceptar: 'Registrar pago' },
     );
-    if (ok) await ejecutar((db) => pagarPendientesDeTrabajador(db, trabajador.id, hoy()));
+    if (ok) await ejecutar((db) => pagarPendientesDeTrabajador(db, trabajador.id, hoy(), filtroCultivo));
   };
 
   return (
@@ -77,7 +85,7 @@ export default function DetalleTrabajador() {
         {trabajador.telefono ? <Texto variante="suave">{trabajador.telefono}</Texto> : null}
         <MensajeError mensaje={errorAccion} />
         <Tarjeta>
-          <Texto variante="seccion">LE DEBO</Texto>
+          <Texto variante="seccion">{nombreCultivo ? `LE DEBO · ${nombreCultivo.toUpperCase()}` : 'LE DEBO'}</Texto>
           <Texto variante="total">{formatearMonto(saldo)}</Texto>
           {saldo > 0 ? (
             <BotonGrande titulo={`Pagar todo ${formatearMonto(saldo)}`} onPress={pagarTodo} ocupado={ocupado} />

@@ -13,7 +13,8 @@ export const TABLAS_RESPALDO = {
   trabajador: ['id', 'nombre', 'telefono', 'activo', 'creado_en'],
   tipo_tarea: ['id', 'nombre', 'unidad', 'tarifa_sugerida_centavos', 'activo'],
   categoria_gasto: ['id', 'nombre', 'activo'],
-  actividad: ['id', 'fecha', 'descripcion', 'tipo_tarea_id', 'creado_en'],
+  cultivo: ['id', 'nombre', 'activo', 'creado_en'],
+  actividad: ['id', 'fecha', 'descripcion', 'tipo_tarea_id', 'cultivo_id', 'creado_en'],
   jornal: [
     'id',
     'actividad_id',
@@ -25,7 +26,7 @@ export const TABLAS_RESPALDO = {
     'creado_en',
   ],
   pago: ['id', 'jornal_id', 'fecha', 'monto_centavos', 'creado_en'],
-  gasto: ['id', 'fecha', 'monto_centavos', 'categoria_id', 'actividad_id', 'nota', 'creado_en'],
+  gasto: ['id', 'fecha', 'monto_centavos', 'categoria_id', 'actividad_id', 'cultivo_id', 'nota', 'creado_en'],
 } as const satisfies Record<string, readonly string[]>;
 
 export type TablaRespaldo = keyof typeof TABLAS_RESPALDO;
@@ -59,6 +60,13 @@ function validarFila(tabla: TablaRespaldo, fila: unknown): FilaRespaldo {
   return fila as FilaRespaldo;
 }
 
+/** El esquema 1 no tenía cultivos: tabla vacía y `cultivo_id` nulo en actividades y gastos. */
+function desdeEsquema1(tablas: Record<string, unknown>): Record<string, unknown> {
+  const conCultivoNulo = (filas: unknown) =>
+    Array.isArray(filas) ? filas.map((f) => (esObjeto(f) ? { ...f, cultivo_id: null } : f)) : filas;
+  return { ...tablas, cultivo: [], actividad: conCultivoNulo(tablas.actividad), gasto: conCultivoNulo(tablas.gasto) };
+}
+
 /**
  * Lee el texto de un archivo y comprueba que sea un respaldo que esta app puede restaurar (RF-23).
  * Solo revisa la forma; las reglas de los datos (montos, saldos, referencias) las aplica la base al insertar.
@@ -77,23 +85,22 @@ export function validarRespaldo(texto: string, versionEsquemaActual: number): Re
   if (datos.version_formato > VERSION_FORMATO || datos.version_esquema > versionEsquemaActual) {
     throw new RespaldoInvalido(MENSAJE_VERSION_NUEVA);
   }
-  // Con una sola versión del esquema no hay nada que convertir. Cuando exista la migración 2, un respaldo
-  // anterior se restaura aplicándole las migraciones que le faltan (arquitectura §4).
-  if (datos.version_esquema < versionEsquemaActual) throw new RespaldoInvalido();
   if (typeof datos.creado_en !== 'string' || Number.isNaN(Date.parse(datos.creado_en))) throw new RespaldoInvalido();
 
   const tablas = datos.tablas;
   if (!esObjeto(tablas)) throw new RespaldoInvalido();
+  // Un respaldo de esquema 1 (sin cultivos) se convierte al esquema 2 (arquitectura §4).
+  const origen = datos.version_esquema < 2 ? desdeEsquema1(tablas) : tablas;
   const validadas = {} as TablasRespaldo;
   for (const tabla of NOMBRES_TABLAS) {
-    const filas = tablas[tabla];
+    const filas = origen[tabla];
     if (!Array.isArray(filas)) throw new RespaldoInvalido();
     validadas[tabla] = filas.map((f) => validarFila(tabla, f));
   }
   return {
     formato: FORMATO_RESPALDO,
     version_formato: datos.version_formato,
-    version_esquema: datos.version_esquema,
+    version_esquema: Math.max(datos.version_esquema, 2),
     creado_en: datos.creado_en,
     tablas: validadas,
   };

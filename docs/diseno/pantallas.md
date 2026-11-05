@@ -1,9 +1,9 @@
 # Pantallas y flujos
 
-**Versión:** 0.1 (borrador para validar con el cliente)
-**Fecha:** 2026-10-10
+**Versión:** 0.3
+**Fecha:** 2026-11-04
 **Estado:** Fase 2 del SDLC (Diseño)
-**Basado en:** `docs/requisitos.md` v0.4
+**Basado en:** `docs/requisitos.md` v0.6
 
 ---
 
@@ -37,16 +37,18 @@ Gastos ────────── + Nuevo gasto / Editar gasto
 Resumen
 Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
        ├─ Tipos de tarea ── Nuevo / Editar tipo
+       ├─ Cultivos ── Nuevo / Editar cultivo
        ├─ Categorías de gasto
        └─ Respaldo
 ```
 
 ## 3. Pantallas
 
-### 3.1 A quién debo (inicio) — RF-13, RF-15
+### 3.1 A quién debo (inicio) — RF-13, RF-15, RF-28
 
 ```
 ┌─────────────────────────────────┐
+│ [Todos✓] [Papas] [Arveja]       │
 │  TOTAL QUE DEBO                 │
 │        $ 245,00                 │
 ├─────────────────────────────────┤
@@ -63,8 +65,10 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 └─────────────────────────────────┘
 ```
 
-- Solo muestra trabajadores con saldo mayor que 0, ordenados de mayor a menor saldo.
-- No muestra avisos de respaldo: el recordatorio es solo una notificación (RF-24, requisitos v0.4).
+- Chips de cultivo: **Todos**, cada cultivo abierto, los cerrados al final con "(cerrado)" y **Sin cultivo** si hay registros sin asociar (RF-28). El último filtro se guarda. Si todavía no hay cultivos, los chips no aparecen.
+- Solo muestra trabajadores con saldo mayor que 0 **en el filtro**, ordenados de mayor a menor saldo. Una persona que trabaja en dos cultivos aparece en cada uno con su saldo de ese cultivo.
+- Al abrir un trabajador se usa el cultivo del filtro, para que su detalle y "Pagar todo" no mezclen cultivos (RF-29). La tarjeta lo indica: "LE DEBO · PAPAS".
+- No muestra avisos de respaldo: el recordatorio es solo una notificación (RF-24).
 - Sin deudas, se muestra el mensaje "No le debes a nadie".
 
 ### 3.2 Detalle de trabajador — RF-14, RF-11
@@ -78,7 +82,7 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 │  [      PAGAR TODO $80,00     ] │
 ├─────────────────────────────────┤
 │ PENDIENTES                      │
-│ 08/10 Fumigación lote norte     │
+│ 08/10 Fumigación de papas       │
 │   1 día × $20,00      $20,00    │
 │   PENDIENTE           [ Pagar ] │
 │ 05/10 Deshierbe                 │
@@ -92,7 +96,7 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 └─────────────────────────────────┘
 ```
 
-- **Pagar todo** confirma con "Registrar pago de $80,00 a Juan Pérez (4 jornales)" y crea un pago por jornal.
+- **Pagar todo** confirma con "Registrar pago de $80,00 a Juan Pérez (4 jornales)" y crea un pago por jornal. Si se llegó con un cultivo elegido, solo incluye jornales de ese cultivo (RF-29).
 - ✎ permite editar nombre y teléfono, o desactivar al trabajador.
 
 ### 3.3 Registrar pago (hoja inferior) — RF-09, RF-12
@@ -112,7 +116,7 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 - El monto viene prellenado con el saldo (pago total). Se puede bajar para un pago parcial.
 - Si el monto supera el saldo, el botón se desactiva y aparece "No puede ser mayor a $10,00".
 
-### 3.4 Nueva actividad (3 pasos) — RF-05, RF-06, RF-07, RF-04
+### 3.4 Nueva actividad (3 pasos) — RF-05, RF-06, RF-07, RF-04, RF-27
 
 **Paso 1: qué se hizo**
 
@@ -122,12 +126,15 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 │                                 │
 │ Fecha  [  Hoy, 10/10/2026  ]    │
 │                                 │
+│ Cultivo                         │
+│ [ Papas ✓ ] [ Arveja ] [ + Otro]│
+│                                 │
 │ Tipo de tarea                   │
 │ [ Diario $20/día ] [Fumigación] │
 │ [ Tractor $15/hora ] [ + Otro ] │
 │                                 │
 │ Descripción                     │
-│ [ Fumigación lote norte      ]  │
+│ [ Fumigación                 ]  │
 │                                 │
 │ [          SIGUIENTE          ] │
 └─────────────────────────────────┘
@@ -137,7 +144,7 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 
 ```
 ┌─────────────────────────────────┐
-│ ‹  Fumigación lote norte 2 de 3 │
+│ ‹  Fumigación de papas   2 de 3 │
 │                                 │
 │ Para todos:                     │
 │ Cantidad [ 1 ] día              │
@@ -156,6 +163,7 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 └─────────────────────────────────┘
 ```
 
+- El cultivo es obligatorio si ya hay cultivos. Viene elegido el que se estaba viendo (RF-28) o, si solo hay un cultivo abierto, ese; con varios y sin filtro hay que tocar uno antes de seguir (RF-27). Los cerrados no se ofrecen.
 - Solo aparecen trabajadores activos (RF-02).
 - La tarifa sugerida viene del tipo de tarea y se puede cambiar (RF-04).
 - "+ Nuevo trabajador" lo crea sin salir del flujo.
@@ -165,7 +173,7 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 ```
 ┌─────────────────────────────────┐
 │ ‹  Revisar               3 de 3 │
-│ 10/10 · Fumigación lote norte   │
+│ 10/10 · Fumigación de papas     │
 │                                 │
 │ Juan Pérez   1 × $20,00  $20,00 ✎│
 │ María Chávez 1 × $20,00  $20,00 ✎│
@@ -181,13 +189,13 @@ Más ───┬─ Trabajadores ── Nuevo / Editar trabajador
 - ✎ cambia la cantidad o la tarifa de un solo trabajador (RF-06). El monto se recalcula.
 - **Guardar** crea la actividad y todos los jornales de una vez (RNF-03), y vuelve al detalle de la actividad.
 
-### 3.5 Actividades: lista y detalle — RF-21, RF-08, RF-11
+### 3.5 Actividades: lista y detalle — RF-21, RF-08, RF-11, RF-28
 
 ```
 Lista                              Detalle
 ┌─────────────────────────────┐    ┌─────────────────────────────────┐
-│ Actividades       [Octubre▾]│    │ ‹ Fumigación lote norte    ✎    │
-│ 10/10 Fumigación lote norte │    │   10/10/2026 · Fumigación       │
+│ Actividades       [Octubre▾]│    │ ‹ Fumigación               ✎    │
+│ 10/10 Fumigación de papas   │    │   10/10/2026 · Fumigación       │
 │   5 trab. · falta $95,00  › │    ├─────────────────────────────────┤
 │ 08/10 Deshierbe             │    │ Jornales        $ 95,00         │
 │   3 trab. · pagado        › │    │ Gastos          $ 18,00         │
@@ -209,7 +217,7 @@ Lista                              Detalle
 - No se puede bajar el monto por debajo de lo ya pagado.
 - "+ Agregar gasto" abre Nuevo gasto con la actividad ya elegida (RF-18).
 
-### 3.6 Gastos: lista y formulario — RF-16, RF-17, RF-18
+### 3.6 Gastos: lista y formulario — RF-16, RF-17, RF-18, RF-27, RF-28
 
 ```
 Lista                              Nuevo gasto
@@ -217,17 +225,21 @@ Lista                              Nuevo gasto
 │ Gastos            [Octubre▾]│    │ ‹  Nuevo gasto                  │
 │ Total del mes:   $ 312,00   │    │ Monto  [        18,00     ]     │
 │ 10/10 Almuerzos     $18,00 ›│    │ Fecha  [ Hoy, 10/10/2026  ]     │
-│ 09/10 Materiales   $250,00 ›│    │ Categoría                       │
-│ ...                         │    │ [Materiales] [Almuerzos✓]       │
-│                        ( + )│    │ [Alquiler maq.] [Otros] [ + ]   │
-└─────────────────────────────┘    │ Actividad (opcional)            │
-                                   │ [ Fumigación lote norte 10/10 ▾]│
+│ 09/10 Materiales   $250,00 ›│    │ Cultivo                         │
+│ ...                         │    │ [ Papas ✓ ] [ Arveja ]          │
+│                        ( + )│    │ Categoría                       │
+└─────────────────────────────┘    │ [Materiales] [Almuerzos✓]       │
+                                   │ [Alquiler maq.] [Otros] [ + ]   │
+                                   │ Actividad (opcional)            │
+                                   │ [ Fumigación de papas   10/10 ▾]│
                                    │ Nota   [ 5 almuerzos         ]  │
                                    │ [          GUARDAR          ]   │
                                    └─────────────────────────────────┘
 ```
 
-### 3.7 Resumen — RF-20
+- Si el gasto se liga a una actividad, el selector de cultivo se reemplaza por "Cultivo: Papas (el de la actividad)" (RF-27). Un gasto que sirve a dos cultivos se deja sin actividad y sin cultivo: no se reparte.
+
+### 3.7 Resumen — RF-20, RF-28
 
 ```
 ┌─────────────────────────────────┐
@@ -251,13 +263,14 @@ Lista                              Nuevo gasto
 - La mano de obra cuenta lo **devengado**: jornales de actividades con fecha en el período, pagados o no.
 - El desglose de pagado y pendiente se muestra aparte.
 
-### 3.8 Más — RF-01, RF-03, RF-17, RF-19, RF-22 a RF-25
+### 3.8 Más — RF-01, RF-03, RF-17, RF-19, RF-22 a RF-26
 
 ```
 ┌─────────────────────────────────┐
 │ Más                             │
 │ Trabajadores                  › │
 │ Tipos de tarea y tarifas      › │
+│ Cultivos                      › │
 │ Categorías de gasto           › │
 │ Respaldo                      › │
 └─────────────────────────────────┘
@@ -265,6 +278,7 @@ Lista                              Nuevo gasto
 
 - **Trabajadores:** lista de activos y una sección plegable de inactivos. El formulario pide nombre y teléfono opcional. El tractor se crea aquí como un trabajador más (RF-19).
 - **Tipos de tarea:** nombre, unidad (día / tarea / hora) y tarifa sugerida. Un aviso dice "Cambiar la tarifa no modifica jornales ya registrados" (RN-04).
+- **Cultivos:** nombre (ej. "Papas 2026"; el terreno, si hace falta, va en el nombre). Cada siembra es un cultivo nuevo. Al terminar se usa **Cerrar cultivo** (con confirmación): ya no se ofrece al registrar, pero sigue en los filtros marcado "(cerrado)" y se puede **Reabrir**. No se borran (RF-26, RN-05).
 - **Categorías:** crear y renombrar. Las 4 iniciales vienen precargadas.
 
 **Respaldo:**
@@ -287,7 +301,7 @@ Lista                              Nuevo gasto
 
 ## 4. Flujos clave (para validar con el cliente)
 
-Los toques cuentan desde la pantalla de inicio. Se asume el caso común: fecha de hoy y tarifa sugerida sin cambios.
+Los toques cuentan desde la pantalla de inicio. Se asume el caso común: fecha de hoy, tarifa sugerida sin cambios y cultivo ya elegido (el último filtro o el único abierto, RF-28). Con varios cultivos y sin filtro, elegir el cultivo suma 1 toque.
 
 ### 4.1 Registrar una jornada de 5 trabajadores (meta: ~1 minuto)
 
@@ -337,15 +351,16 @@ Para un pago parcial: tocar al trabajador, **Pagar** en el jornal, escribir el m
 |---|---|
 | RF-01, RF-02, RF-19 | 3.8 Trabajadores; 3.4 paso 2 (solo activos) |
 | RF-03, RF-04, RN-04 | 3.8 Tipos de tarea; 3.4 pasos 1 y 2 |
-| RF-05 a RF-07 | 3.4 Nueva actividad |
+| RF-05 a RF-07, RF-27 | 3.4 Nueva actividad |
 | RF-08 | 3.5 Detalle de actividad (⋮ Editar / Eliminar) |
 | RF-09, RF-12 | 3.3 Registrar pago |
 | RF-10 | Estados en 3.2 y 3.5 |
 | RF-11 | "Pagar todo" en 3.2 y 3.5 |
-| RF-13, RF-15 | 3.1 A quién debo |
-| RF-14 | 3.2 Detalle de trabajador |
-| RF-16 a RF-18 | 3.6 Gastos; "+ Agregar gasto" en 3.5 |
-| RF-20 | 3.7 Resumen |
+| RF-13, RF-15, RF-28 | 3.1 A quién debo |
+| RF-14, RF-29 | 3.2 Detalle de trabajador |
+| RF-16 a RF-18, RF-27, RF-28 | 3.6 Gastos; "+ Agregar gasto" en 3.5 |
+| RF-20, RF-28 | 3.7 Resumen |
+| RF-26 | 3.8 Cultivos |
 | RF-21 | 3.5 Detalle de actividad |
 | RF-22 a RF-25 | 3.8 Respaldo; notificación local (sin aviso en pantalla) |
 | RNF-05 | §1 y §4 |

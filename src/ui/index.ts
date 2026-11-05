@@ -3,6 +3,7 @@ export { CampoCantidad, CampoFecha, CampoMonto, CampoTexto } from './campos';
 export { Chips, type OpcionChip } from './chips';
 export { confirmar } from './confirmar';
 export { DatosProvider, hoy, mensajeDeError, useAccion, useConsulta, useDatos } from './datos-context';
+export { cultivoInicial, FiltroDeCultivo, SelectorDeCultivo } from './filtro-cultivo';
 export { idDeRuta, leerCampo, volver } from './formularios';
 export { JornalFila } from './jornal-fila';
 export { EtiquetaEstado, Fila, MensajeError, Seccion, Tarjeta, Vacio } from './listas';

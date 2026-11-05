@@ -2,6 +2,7 @@ import type { Centavos, Centesimas } from '../dominio/dinero';
 import type { Fecha } from '../dominio/fecha';
 import type { Unidad } from '../dominio/jornal';
 import type { Consultas } from './base-datos';
+import { clausulaCultivo, type FiltroCultivo } from './filtro-cultivo';
 
 export interface Jornal {
   id: number;
@@ -78,11 +79,19 @@ export async function listarJornalesDeActividad(db: Consultas, actividadId: numb
   ]);
 }
 
-/** Jornales con saldo de un trabajador, del más antiguo al más reciente (RF-14). */
-export async function listarPendientesDeTrabajador(db: Consultas, trabajadorId: number): Promise<JornalDetallado[]> {
+/**
+ * Jornales con saldo de un trabajador, del más antiguo al más reciente (RF-14).
+ * Con filtro de cultivo solo entran los de ese cultivo (RF-29).
+ */
+export async function listarPendientesDeTrabajador(
+  db: Consultas,
+  trabajadorId: number,
+  filtro: FiltroCultivo = undefined,
+): Promise<JornalDetallado[]> {
+  const cultivo = clausulaCultivo('a.cultivo_id', filtro);
   return db.consultar<JornalDetallado>(
-    `${DETALLADO} WHERE j.trabajador_id = ? AND j.saldo_centavos > 0 ORDER BY a.fecha, j.id`,
-    [trabajadorId],
+    `${DETALLADO} WHERE j.trabajador_id = ? AND j.saldo_centavos > 0${cultivo.sql} ORDER BY a.fecha, j.id`,
+    [trabajadorId, ...cultivo.params],
   );
 }
 

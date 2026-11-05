@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Stack } from 'expo-router/stack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { editarGasto, eliminarGasto, registrarGasto } from '../../casos-uso/gastos';
 import { listarActividades, obtenerActividad } from '../../datos/actividades';
+import { listarCultivos } from '../../datos/cultivos';
 import { listarCategorias, obtenerGasto, type Gasto } from '../../datos/gastos';
 import { montoEditable, parsearMonto } from '../../dominio/dinero';
 import type { Fecha } from '../../dominio/fecha';
@@ -15,14 +16,17 @@ import {
   Cargando,
   Chips,
   confirmar,
+  cultivoInicial,
   hoy,
   idDeRuta,
   leerCampo,
   MensajeError,
   Pantalla,
+  SelectorDeCultivo,
   Texto,
   useAccion,
   useConsulta,
+  useDatos,
   volver,
 } from '../../ui';
 
@@ -30,7 +34,8 @@ const SIN_ACTIVIDAD = 0;
 
 /**
  * Nuevo gasto (`/gasto/nuevo`, opcionalmente `?actividadId=`) o edición de uno existente.
- * Fecha, monto, categoría, actividad opcional y nota (RF-16, RF-18).
+ * Fecha, monto, categoría, cultivo, actividad opcional y nota (RF-16, RF-18). Un gasto ligado a una actividad
+ * toma el cultivo de la actividad (RF-27).
  */
 export default function FormularioGastoRuta() {
   const params = useLocalSearchParams<{ id: string; actividadId?: string }>();
@@ -56,28 +61,52 @@ function FormularioGasto({ gasto, actividadInicial }: { gasto: Gasto | null; act
   const [fecha, setFecha] = useState<Fecha>(gasto?.fecha ?? hoy());
   const [categoriaId, setCategoriaId] = useState<number | null>(gasto?.categoriaId ?? null);
   const [actividadId, setActividadId] = useState<number>(gasto?.actividadId ?? actividadInicial ?? SIN_ACTIVIDAD);
+  const [cultivoId, setCultivoId] = useState<number | null>(gasto?.cultivoId ?? null);
   const [nota, setNota] = useState(gasto?.nota ?? '');
+  const { filtroCultivo } = useDatos();
 
   // Se ofrecen las actividades de los 30 días anteriores a la fecha del gasto, más la ya elegida.
   const { datos } = useConsulta(
     async (db) => ({
       categorias: await listarCategorias(db),
+      cultivos: await listarCultivos(db, { incluirInactivos: true }),
       actividades: await listarActividades(db, sumarDias(fecha, -30), fecha),
       elegida: actividadId ? await obtenerActividad(db, actividadId) : null,
     }),
     [fecha, actividadId],
   );
+  const cultivos = datos?.cultivos;
+
+  // Un gasto nuevo parte del cultivo que se estaba viendo (RF-28).
+  useEffect(() => {
+    if (gasto || !cultivos || cultivoId !== null) return;
+    setCultivoId(cultivoInicial(cultivos, filtroCultivo));
+  }, [gasto, cultivos, cultivoId, filtroCultivo]);
+
   if (!datos) return <Cargando />;
 
   const { elegida } = datos;
   const actividades =
     elegida && !datos.actividades.some((a) => a.id === elegida.id) ? [elegida, ...datos.actividades] : datos.actividades;
+  const cultivoDeActividad = elegida
+    ? (datos.cultivos.find((c) => c.id === elegida.cultivoId)?.nombre ?? 'Sin cultivo')
+    : null;
+  // Con cultivos en el catálogo, un gasto suelto debe llevar uno; uno anterior a los cultivos puede seguir sin él (RF-27).
+  const faltaCultivo =
+    datos.cultivos.length > 0 && !actividadId && cultivoId === null && !(gasto && gasto.cultivoId === null);
 
   const guardar = async () => {
     const m = leerCampo(() => parsearMonto(monto));
     setErrorMonto(m.error);
     if (m.valor === null || categoriaId === null) return;
-    const datosGasto = { fecha, monto: m.valor, categoriaId, actividadId: actividadId || null, nota };
+    const datosGasto = {
+      fecha,
+      monto: m.valor,
+      categoriaId,
+      actividadId: actividadId || null,
+      cultivoId: actividadId ? null : cultivoId,
+      nota,
+    };
     const r = await ejecutar((db) =>
       gasto ? editarGasto(db, gasto.id, datosGasto) : registrarGasto(db, datosGasto).then(() => undefined),
     );
@@ -95,7 +124,7 @@ function FormularioGasto({ gasto, actividadInicial }: { gasto: Gasto | null; act
     <Pantalla
       pie={
         <>
-          <BotonGrande titulo="Guardar" onPress={guardar} ocupado={ocupado} desactivado={categoriaId === null} />
+          <BotonGrande titulo="Guardar" onPress={guardar} ocupado={ocupado} desactivado={categoriaId === null || faltaCultivo} />
           {gasto ? <BotonGrande titulo="Eliminar" variante="peligro" onPress={borrar} desactivado={ocupado} /> : null}
         </>
       }
@@ -119,6 +148,16 @@ function FormularioGasto({ gasto, actividadInicial }: { gasto: Gasto | null; act
         seleccionada={actividadId}
         onSeleccionar={setActividadId}
       />
+      {cultivoDeActividad !== null ? (
+        <Texto variante="suave" style={{ marginBottom: 16 }}>
+          Cultivo: {cultivoDeActividad} (el de la actividad)
+        </Texto>
+      ) : datos.cultivos.length > 0 ? (
+        <>
+          <Texto variante="suave">Cultivo</Texto>
+          <SelectorDeCultivo cultivos={datos.cultivos} valor={cultivoId} onCambio={setCultivoId} conservar={gasto?.cultivoId} />
+        </>
+      ) : null}
       <CampoTexto etiqueta="Nota (opcional)" valor={nota} onCambio={setNota} placeholder="Ej.: 5 almuerzos" />
     </Pantalla>
   );

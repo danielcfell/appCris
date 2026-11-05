@@ -6,6 +6,7 @@ import { eliminarActividad } from '../../casos-uso/actividades';
 import { eliminarJornal } from '../../casos-uso/jornales';
 import { pagarPendientesDeActividad } from '../../casos-uso/pagos';
 import { obtenerActividad } from '../../datos/actividades';
+import { obtenerCultivo } from '../../datos/cultivos';
 import { listarGastosDeActividad } from '../../datos/gastos';
 import { listarJornalesDeActividad, type JornalDetallado } from '../../datos/jornales';
 import { costoDeActividad } from '../../datos/resumenes';
@@ -40,6 +41,7 @@ export default function DetalleActividad() {
     return {
       actividad,
       tipo: actividad ? await obtenerTipoTarea(db, actividad.tipoTareaId) : null,
+      cultivo: actividad?.cultivoId != null ? await obtenerCultivo(db, actividad.cultivoId) : null,
       costo: await costoDeActividad(db, id),
       jornales: await listarJornalesDeActividad(db, id),
       gastos: await listarGastosDeActividad(db, id),
@@ -48,7 +50,7 @@ export default function DetalleActividad() {
   const { ejecutar, error: errorAccion, ocupado } = useAccion();
 
   if (!datos?.actividad) return <Cargando error={error ?? (datos ? 'No se encontró la actividad.' : null)} />;
-  const { actividad, tipo, costo, jornales, gastos } = datos;
+  const { actividad, tipo, cultivo, costo, jornales, gastos } = datos;
 
   const pagarTodo = async () => {
     const n = jornales.filter((j) => j.saldo > 0).length;
@@ -91,6 +93,7 @@ export default function DetalleActividad() {
         <Texto variante="suave">
           {formatearFecha(actividad.fecha)}
           {tipo ? ` · ${tipo.nombre}` : ''}
+          {cultivo ? ` · ${cultivo.nombre}` : ''}
         </Texto>
         <MensajeError mensaje={errorAccion} />
         <Tarjeta>

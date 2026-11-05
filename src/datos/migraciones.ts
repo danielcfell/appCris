@@ -116,6 +116,20 @@ export const MIGRACIONES: readonly string[] = [
   INSERT INTO categoria_gasto (nombre) VALUES
     ('Materiales'), ('Almuerzos'), ('Alquiler de maquinaria'), ('Otros');
   `,
+  // 2: cultivos. Datos existentes quedan sin cultivo (RF-26, RF-27).
+  `
+  CREATE TABLE cultivo (
+    id        INTEGER PRIMARY KEY,
+    nombre    TEXT    NOT NULL CHECK (length(trim(nombre)) > 0),
+    activo    INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
+    creado_en TEXT    NOT NULL
+  );
+
+  ALTER TABLE actividad ADD COLUMN cultivo_id INTEGER REFERENCES cultivo(id) ON DELETE RESTRICT;
+  ALTER TABLE gasto ADD COLUMN cultivo_id INTEGER REFERENCES cultivo(id) ON DELETE RESTRICT;
+  CREATE INDEX ix_actividad_cultivo ON actividad(cultivo_id);
+  CREATE INDEX ix_gasto_cultivo ON gasto(cultivo_id);
+  `,
 ];
 
 export async function versionEsquema(db: Consultas): Promise<number> {

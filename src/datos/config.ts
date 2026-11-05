@@ -1,7 +1,7 @@
 import type { Consultas } from './base-datos';
 
-/** `ultimo_respaldo_en` e `instalado_en` son instantes ISO-8601 (RF-24, RF-25). */
-export type ClaveConfig = 'ultimo_respaldo_en' | 'instalado_en';
+/** `ultimo_respaldo_en` e `instalado_en` son instantes ISO-8601 (RF-24, RF-25). `filtro_cultivo` es el último cultivo (RF-28). */
+export type ClaveConfig = 'ultimo_respaldo_en' | 'instalado_en' | 'filtro_cultivo';
 
 export async function leerConfig(db: Consultas, clave: ClaveConfig): Promise<string | null> {
   const f = await db.consultarUno<{ valor: string }>('SELECT valor FROM config WHERE clave = ?', [clave]);

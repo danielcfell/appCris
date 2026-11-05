@@ -15,7 +15,7 @@ function respaldoVacio(): Respaldo {
   return {
     formato: 'appcris-respaldo',
     version_formato: 1,
-    version_esquema: 1,
+    version_esquema: 2,
     creado_en: new Date(2026, 9, 3, 18, 30).toISOString(),
     tablas,
   };
@@ -33,7 +33,7 @@ const texto = (v: unknown) => JSON.stringify(v);
 
 describe('RF-23: validar el archivo de respaldo', () => {
   test('acepta un respaldo bien formado', () => {
-    const r = validarRespaldo(texto(conTrabajador()), 1);
+    const r = validarRespaldo(texto(conTrabajador()), 2);
     expect(r.tablas.trabajador).toEqual([{ id: 1, nombre: 'Juan', telefono: null, activo: 1, creado_en: 'x' }]);
   });
 
@@ -48,12 +48,36 @@ describe('RF-23: validar el archivo de respaldo', () => {
     ['valor no permitido', texto(conTrabajador({ nombre: { a: 1 } }))],
     ['fecha de creación inválida', texto({ ...respaldoVacio(), creado_en: 'ayer' })],
   ])('rechaza: %s', (_caso, contenido) => {
-    expect(() => validarRespaldo(contenido, 1)).toThrow(RespaldoInvalido);
+    expect(() => validarRespaldo(contenido, 2)).toThrow(RespaldoInvalido);
+  });
+
+  test('RF-26: un respaldo de esquema 1 (sin cultivos) se acepta y se convierte', () => {
+    const { cultivo: _cultivo, ...tablasAntiguas } = respaldoVacio().tablas;
+    const actividadVieja = { id: 1, fecha: '2026-10-08', descripcion: 'x', tipo_tarea_id: 1, creado_en: 'x' };
+    const gastoViejo = {
+      id: 1,
+      fecha: '2026-10-08',
+      monto_centavos: 500,
+      categoria_id: 1,
+      actividad_id: null,
+      nota: null,
+      creado_en: 'x',
+    };
+    const antiguo = {
+      ...respaldoVacio(),
+      version_esquema: 1,
+      tablas: { ...tablasAntiguas, actividad: [actividadVieja], gasto: [gastoViejo] },
+    };
+    const r = validarRespaldo(texto(antiguo), 2);
+    expect(r.version_esquema).toBe(2);
+    expect(r.tablas.cultivo).toEqual([]);
+    expect(r.tablas.actividad[0].cultivo_id).toBeNull();
+    expect(r.tablas.gasto[0].cultivo_id).toBeNull();
   });
 
   test('rechaza con un mensaje claro un respaldo de una versión más nueva', () => {
-    expect(() => validarRespaldo(texto({ ...respaldoVacio(), version_esquema: 2 }), 1)).toThrow(/versión más nueva/);
-    expect(() => validarRespaldo(texto({ ...respaldoVacio(), version_formato: 2 }), 1)).toThrow(/versión más nueva/);
+    expect(() => validarRespaldo(texto({ ...respaldoVacio(), version_esquema: 3 }), 2)).toThrow(/versión más nueva/);
+    expect(() => validarRespaldo(texto({ ...respaldoVacio(), version_formato: 2 }), 2)).toThrow(/versión más nueva/);
   });
 });
 

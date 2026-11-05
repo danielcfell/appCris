@@ -17,6 +17,8 @@ export interface Ajuste {
 export interface Borrador {
   fecha: Fecha;
   tipoTareaId: number | null;
+  /** Cultivo de la actividad; obligatorio si ya hay cultivos (RF-27). */
+  cultivoId: number | null;
   descripcion: string;
   cantidadComun: string;
   tarifaComun: string;
@@ -76,6 +78,7 @@ export function datosDelBorrador(borrador: Borrador, lineas: LineaBorrador[]): D
     fecha: borrador.fecha,
     descripcion: borrador.descripcion,
     tipoTareaId: borrador.tipoTareaId,
+    cultivoId: borrador.cultivoId,
     cantidadComun,
     tarifaComun,
     trabajadores: lineas.map((l) =>
@@ -88,6 +91,7 @@ export function borradorNuevo(): Borrador {
   return {
     fecha: hoy(),
     tipoTareaId: null,
+    cultivoId: null,
     descripcion: '',
     cantidadComun: '1',
     tarifaComun: '',

@@ -4,6 +4,7 @@ import { validarFecha, type Fecha } from '../dominio/fecha';
 import { validarPago } from '../dominio/pago';
 import type { BaseDatos, Consultas } from '../datos/base-datos';
 import { listarPendientesDeActividad, listarPendientesDeTrabajador, obtenerJornal, type JornalDetallado } from '../datos/jornales';
+import type { FiltroCultivo } from '../datos/filtro-cultivo';
 import { insertarPago } from '../datos/pagos';
 import { marcaTiempo } from './comun';
 
@@ -36,14 +37,20 @@ async function pagarSaldos(tx: Consultas, jornales: JornalDetallado[], fecha: Fe
   return { pagos: jornales.length, total };
 }
 
-/** Paga de una vez todo lo pendiente de un trabajador: un pago por jornal (RF-11). */
+/**
+ * Paga de una vez todo lo pendiente de un trabajador: un pago por jornal (RF-11).
+ * Con filtro de cultivo solo cubre los jornales de ese cultivo (RF-29).
+ */
 export async function pagarPendientesDeTrabajador(
   db: BaseDatos,
   trabajadorId: number,
   fecha: Fecha,
+  filtro: FiltroCultivo = undefined,
 ): Promise<ResultadoPagoTotal> {
   validarFecha(fecha);
-  return db.transaccion(async (tx) => pagarSaldos(tx, await listarPendientesDeTrabajador(tx, trabajadorId), fecha));
+  return db.transaccion(async (tx) =>
+    pagarSaldos(tx, await listarPendientesDeTrabajador(tx, trabajadorId, filtro), fecha),
+  );
 }
 
 /** Paga de una vez todo lo pendiente de una actividad (RF-11). */

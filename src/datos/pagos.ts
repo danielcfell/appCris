@@ -1,6 +1,7 @@
 import type { Centavos } from '../dominio/dinero';
 import type { Fecha } from '../dominio/fecha';
 import type { Consultas } from './base-datos';
+import { clausulaCultivo, type FiltroCultivo } from './filtro-cultivo';
 
 export interface Pago {
   id: number;
@@ -37,16 +38,21 @@ export async function listarPagosDeJornal(db: Consultas, jornalId: number): Prom
   );
 }
 
-/** Historial de pagos de un trabajador, del más reciente al más antiguo. */
-export async function listarPagosDeTrabajador(db: Consultas, trabajadorId: number): Promise<PagoDetallado[]> {
+/** Historial de pagos de un trabajador, del más reciente al más antiguo. Se puede acotar a un cultivo (RF-29). */
+export async function listarPagosDeTrabajador(
+  db: Consultas,
+  trabajadorId: number,
+  filtro: FiltroCultivo = undefined,
+): Promise<PagoDetallado[]> {
+  const cultivo = clausulaCultivo('a.cultivo_id', filtro);
   return db.consultar<PagoDetallado>(
     `SELECT p.id, p.jornal_id AS jornalId, p.fecha, p.monto_centavos AS monto,
             a.descripcion, a.fecha AS fechaActividad
      FROM pago p
      JOIN jornal j    ON j.id = p.jornal_id
      JOIN actividad a ON a.id = j.actividad_id
-     WHERE j.trabajador_id = ?
+     WHERE j.trabajador_id = ?${cultivo.sql}
      ORDER BY p.fecha DESC, p.id DESC`,
-    [trabajadorId],
+    [trabajadorId, ...cultivo.params],
   );
 }

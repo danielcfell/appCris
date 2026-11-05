@@ -3,17 +3,35 @@ import { useState } from 'react';
 import { listarGastos } from '../../datos/gastos';
 import { formatearMonto } from '../../dominio/dinero';
 import { formatearFechaCorta, periodoMes } from '../../dominio/periodo';
-import { BotonFlotante, Cargando, Fila, hoy, Pantalla, SelectorPeriodo, Tarjeta, Texto, useConsulta, Vacio } from '../../ui';
+import {
+  BotonFlotante,
+  Cargando,
+  Fila,
+  FiltroDeCultivo,
+  hoy,
+  Pantalla,
+  SelectorPeriodo,
+  Tarjeta,
+  Texto,
+  useConsulta,
+  useDatos,
+  Vacio,
+} from '../../ui';
 
-/** Gastos del mes con su total (RF-16). */
+/** Gastos del mes con su total; todos o de un cultivo (RF-16, RF-28). */
 export default function Gastos() {
   const router = useRouter();
+  const { filtroCultivo } = useDatos();
   const [periodo, setPeriodo] = useState(() => periodoMes(hoy()));
-  const { datos, error } = useConsulta((db) => listarGastos(db, periodo.desde, periodo.hasta), [periodo.desde, periodo.hasta]);
+  const { datos, error } = useConsulta(
+    (db) => listarGastos(db, periodo.desde, periodo.hasta, filtroCultivo),
+    [periodo.desde, periodo.hasta, filtroCultivo],
+  );
   const total = datos?.reduce((suma, g) => suma + g.monto, 0) ?? 0;
 
   return (
     <Pantalla flotante={<BotonFlotante accessibilityLabel="Nuevo gasto" onPress={() => router.push('/gasto/nuevo')} />}>
+      <FiltroDeCultivo />
       <SelectorPeriodo periodo={periodo} onCambio={setPeriodo} />
       {!datos ? (
         <Cargando error={error} />
@@ -36,7 +54,9 @@ export default function Gastos() {
               <Texto variante="grande">
                 {formatearFechaCorta(g.fecha)} {g.categoria}
               </Texto>
-              {g.nota ? <Texto variante="pequeno">{g.nota}</Texto> : null}
+              {g.cultivo || g.nota ? (
+                <Texto variante="pequeno">{[g.cultivo, g.nota].filter(Boolean).join(' · ')}</Texto>
+              ) : null}
             </Fila>
           ))}
         </>

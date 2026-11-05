@@ -4,6 +4,7 @@ import { Stack } from 'expo-router/stack';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { crearActividadConJornales } from '../../../casos-uso/actividades';
+import { obtenerCultivo } from '../../../datos/cultivos';
 import { listarTiposTarea } from '../../../datos/tipos-tarea';
 import { listarTrabajadores } from '../../../datos/trabajadores';
 import { formatearCantidad, formatearMonto } from '../../../dominio/dinero';
@@ -35,8 +36,12 @@ export default function PasoRevisar() {
   const router = useRouter();
   const { borrador, actualizar } = useBorradorActividad();
   const { datos, error } = useConsulta(
-    async (db) => ({ tipos: await listarTiposTarea(db, { incluirInactivos: true }), trabajadores: await listarTrabajadores(db) }),
-    [],
+    async (db) => ({
+      tipos: await listarTiposTarea(db, { incluirInactivos: true }),
+      trabajadores: await listarTrabajadores(db),
+      cultivo: borrador.cultivoId === null ? null : await obtenerCultivo(db, borrador.cultivoId),
+    }),
+    [borrador.cultivoId],
   );
   const { ejecutar, error: errorAccion, ocupado } = useAccion();
   const [editando, setEditando] = useState<number | null>(null);
@@ -77,6 +82,7 @@ export default function PasoRevisar() {
       >
         <Texto variante="suave">
           {formatearFechaCorta(borrador.fecha)} · {borrador.descripcion.trim() || tipo.nombre}
+          {datos.cultivo ? ` · ${datos.cultivo.nombre}` : ''}
         </Texto>
         <MensajeError mensaje={errorAccion} />
         {lineas.map((l) =>

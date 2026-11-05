@@ -2,6 +2,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Fila, Pantalla, Texto } from '../../ui';
 
 const OPCIONES: { titulo: string; ruta: Href }[] = [
+  { titulo: 'Cultivos', ruta: '/cultivos' },
   { titulo: 'Trabajadores', ruta: '/trabajadores' },
   { titulo: 'Tipos de tarea y tarifas', ruta: '/tipos-tarea' },
   { titulo: 'Categorías de gasto', ruta: '/categorias' },

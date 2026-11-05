@@ -8,6 +8,7 @@ import {
   Cargando,
   Chips,
   colores,
+  FiltroDeCultivo,
   hoy,
   Pantalla,
   Seccion,
@@ -15,6 +16,7 @@ import {
   Tarjeta,
   Texto,
   useConsulta,
+  useDatos,
 } from '../../ui';
 
 const TIPOS: { clave: TipoPeriodo; etiqueta: string }[] = [
@@ -25,10 +27,15 @@ const TIPOS: { clave: TipoPeriodo; etiqueta: string }[] = [
 
 /**
  * Resumen de un período: mano de obra (lo trabajado, pagado o no), total por categoría y total general (RF-20).
+ * Se puede ver todo junto o un cultivo a la vez (RF-28).
  */
 export default function Resumen() {
+  const { filtroCultivo } = useDatos();
   const [periodo, setPeriodo] = useState<Periodo>(() => periodoMes(hoy()));
-  const { datos, error } = useConsulta((db) => resumenDePeriodo(db, periodo.desde, periodo.hasta), [periodo.desde, periodo.hasta]);
+  const { datos, error } = useConsulta(
+    (db) => resumenDePeriodo(db, periodo.desde, periodo.hasta, filtroCultivo),
+    [periodo.desde, periodo.hasta, filtroCultivo],
+  );
 
   const cambiarTipo = (tipo: TipoPeriodo) => {
     if (tipo === 'semana') setPeriodo(periodoSemana(hoy()));
@@ -45,6 +52,7 @@ export default function Resumen() {
 
   return (
     <Pantalla>
+      <FiltroDeCultivo />
       <Chips opciones={TIPOS} seleccionada={periodo.tipo} onSeleccionar={cambiarTipo} />
       {periodo.tipo === 'rango' ? (
         <View style={estilos.rango}>

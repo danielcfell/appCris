@@ -1,9 +1,9 @@
 # Arquitectura y estrategia de pruebas
 
-**Versión:** 0.1 (borrador)
-**Fecha:** 2026-10-10
+**Versión:** 0.3
+**Fecha:** 2026-11-04
 **Estado:** Fase 2 del SDLC (Diseño)
-**Basado en:** `docs/requisitos.md` v0.4
+**Basado en:** `docs/requisitos.md` v0.6
 
 ---
 
@@ -52,7 +52,7 @@ Las dependencias van solo hacia abajo. `src/dominio/` no importa React, Expo ni 
   - Cada motor solo aporta una `ConexionSql` mínima: `adaptador-expo.ts` (celular) y `adaptador-node.ts` (pruebas, `better-sqlite3`). Así las pruebas ejercitan exactamente la misma lógica de transacciones que el celular.
   - **No se usa `withExclusiveTransactionAsync` de expo-sqlite**: abre una conexión nueva, donde `PRAGMA foreign_keys` queda desactivado, y empieza con un `BEGIN` diferido.
 - `migraciones.ts`: lista ordenada de migraciones SQL. Se aplican al abrir la base según `PRAGMA user_version`, cada una en su propia transacción. Las migraciones solo agregan; nunca editan una migración ya publicada.
-- Repositorios (`trabajadores.ts`, `actividades.ts`, `jornales.ts`, `pagos.ts`, `gastos.ts`, `resumenes.ts`, `config.ts`): SQL explícito, sin ORM.
+- Repositorios (`trabajadores.ts`, `cultivos.ts`, `actividades.ts`, `jornales.ts`, `pagos.ts`, `gastos.ts`, `resumenes.ts`, `config.ts`): SQL explícito, sin ORM.
 - Al abrir la conexión: `PRAGMA foreign_keys = ON`, `PRAGMA journal_mode = WAL`, `PRAGMA synchronous = FULL`. `FULL` garantiza que una operación confirmada sobrevive a un corte de batería (RNF-04).
 
 ### 2.3 `src/casos-uso/`
@@ -61,19 +61,24 @@ Cada acción del usuario que escribe datos es una función que valida con el dom
 
 | Caso de uso | Qué hace | Requisitos |
 |---|---|---|
-| `crearActividadConJornales` | Inserta la actividad y N jornales con cantidad y tarifa comunes o individuales. Sin descripción, usa el nombre del tipo de tarea | RF-05, RF-06, RF-07 |
+| `crearActividadConJornales` | Inserta la actividad (con cultivo) y N jornales con cantidad y tarifa comunes o individuales. Sin descripción, usa el nombre del tipo de tarea | RF-05, RF-06, RF-07, RF-27 |
 | `agregarJornales` | Agrega trabajadores a una actividad ya registrada | RF-06 |
 | `eliminarActividad` | Solo si la actividad no tiene jornales ni gastos | — |
 | `editarJornal` / `eliminarJornal` | Edita cantidad o tarifa, o elimina; si tiene pagos, la UI pide confirmación antes | RF-08 |
 | `registrarPago` | Valida contra el saldo actual y lo inserta | RF-09, RF-12 |
-| `pagarPendientesDeTrabajador` / `pagarPendientesDeActividad` | Un pago por cada jornal con saldo, por el saldo exacto | RF-11 |
-| `registrarGasto` | Con categoría y actividad opcional | RF-16 a RF-18 |
-| `desactivarTrabajador` | Marca `activo = 0` | RF-01, RF-02, RN-05 |
+| `pagarPendientesDeTrabajador` / `pagarPendientesDeActividad` | Un pago por cada jornal con saldo, por el saldo exacto. El de trabajador admite filtro de cultivo | RF-11, RF-29 |
+| `registrarGasto` | Con categoría, cultivo y actividad opcional; si hay actividad, hereda su cultivo | RF-16 a RF-18, RF-27 |
+| `desactivarTrabajador` / `desactivarCultivo` | Marca `activo = 0`. En pantalla, el cultivo se "cierra" y se puede reabrir (`reactivarCultivo`) | RF-01, RF-02, RF-26, RN-05 |
+| `crearCultivo` / `editarCultivo` | Nombre obligatorio y sin repetir (sin distinguir mayúsculas), incluidos los cerrados | RF-26 |
+| `resolverCultivo` | Cultivo con el que se guarda un registro nuevo: obligatorio si el catálogo no está vacío, debe existir y estar abierto. Al editar se conserva el que ya tenía, aunque esté cerrado | RF-27 |
+| `leerFiltroCultivo` / `guardarFiltroCultivo` | Último filtro elegido (`config.filtro_cultivo`). Si ese cultivo ya no existe, cuenta como "todos" | RF-28 |
 | `exportarRespaldo` / `restaurarRespaldo` | Ver §4 | RF-22 a RF-25 |
 
 ### 2.4 Interfaz y actualización de datos
 
 No se usa una librería de estado global. Un contexto `DatosContext` expone un contador `version` que cada caso de uso incrementa al confirmar su transacción. Las pantallas vuelven a consultar cuando cambia `version`, así "A quién debo" y los saldos se actualizan al instante (RF-15).
+
+El mismo contexto guarda el **cultivo que se está viendo** (`filtroCultivo`, RF-28). Lo comparten "A quién debo", actividades, gastos, resumen y el detalle del trabajador, y se recupera de `config.filtro_cultivo` al abrir la app. Los formularios de alta lo usan para prellenar el cultivo (`cultivoInicial`).
 
 ## 3. Modelo de datos
 
@@ -99,11 +104,19 @@ CREATE TABLE tipo_tarea (
   activo                    INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1))
 );
 
+CREATE TABLE cultivo (
+  id        INTEGER PRIMARY KEY,
+  nombre    TEXT    NOT NULL,
+  activo    INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
+  creado_en TEXT    NOT NULL
+);
+
 CREATE TABLE actividad (
   id            INTEGER PRIMARY KEY,
   fecha         TEXT    NOT NULL,
   descripcion   TEXT    NOT NULL,
   tipo_tarea_id INTEGER NOT NULL REFERENCES tipo_tarea(id) ON DELETE RESTRICT,
+  cultivo_id    INTEGER REFERENCES cultivo(id) ON DELETE RESTRICT,
   creado_en     TEXT    NOT NULL
 );
 
@@ -141,6 +154,7 @@ CREATE TABLE gasto (
   monto_centavos INTEGER NOT NULL CHECK (monto_centavos > 0),
   categoria_id   INTEGER NOT NULL REFERENCES categoria_gasto(id) ON DELETE RESTRICT,
   actividad_id   INTEGER REFERENCES actividad(id) ON DELETE RESTRICT,
+  cultivo_id     INTEGER REFERENCES cultivo(id) ON DELETE RESTRICT,
   nota           TEXT,
   creado_en      TEXT    NOT NULL
 );
@@ -149,7 +163,7 @@ CREATE TABLE config (
   clave TEXT PRIMARY KEY,
   valor TEXT NOT NULL
 );
--- Claves: ultimo_respaldo_en, instalado_en
+-- Claves: ultimo_respaldo_en, instalado_en, filtro_cultivo
 
 CREATE VIEW v_jornal_saldo AS
 SELECT j.*,
@@ -162,7 +176,9 @@ CREATE INDEX ix_jornal_trabajador ON jornal(trabajador_id);
 CREATE INDEX ix_jornal_actividad  ON jornal(actividad_id);
 CREATE INDEX ix_pago_jornal       ON pago(jornal_id);
 CREATE INDEX ix_actividad_fecha   ON actividad(fecha);
+CREATE INDEX ix_actividad_cultivo ON actividad(cultivo_id);
 CREATE INDEX ix_gasto_fecha       ON gasto(fecha);
+CREATE INDEX ix_gasto_cultivo     ON gasto(cultivo_id);
 ```
 
 **Disparadores de respaldo de RN-02.** El dominio valida primero, pero la base también rechaza un saldo negativo:
@@ -177,10 +193,10 @@ CREATE INDEX ix_gasto_fecha       ON gasto(fecha);
 - **RN-05.** No existe ruta para borrar un trabajador con jornales; `ON DELETE RESTRICT` lo impide también en la base.
 - **Actividad.** Una actividad solo puede eliminarse si no tiene jornales ni gastos.
 - **Un trabajador aparece una sola vez por actividad** (`UNIQUE`). Si trabajó más, se aumenta la cantidad.
+- **Cultivo (RF-26 a RF-29).** `cultivo_id` en `actividad` y `gasto` es nullable para los datos anteriores a la migración 2 ("sin cultivo"). Las altas nuevas exigen cultivo si el catálogo no está vacío. El pago no lleva cultivo: se deriva de la actividad del jornal. SQLite no aplica claves foráneas de columnas añadidas con `ALTER TABLE`; el caso de uso rechaza un `cultivo_id` inexistente o cerrado. Un gasto anterior a los cultivos puede seguir sin cultivo al editarlo. Un gasto ligado a una actividad toma siempre el cultivo de la actividad, sea cual sea el que se indique.
+- **Un trabajador, varios cultivos.** El trabajador es uno solo en el catálogo. Su deuda, su historial de pagos y "Pagar todo" se calculan por cultivo con la misma cláusula (`clausulaCultivo`, en `filtro-cultivo.ts`): `undefined` = todos, `null` = sin cultivo, número = ese cultivo.
 
-**Extensibilidad (RNF-07).** Ninguno de estos cambios modifica tablas existentes ni reescribe consultas:
-- Terreno/cultivo: migración que crea `terreno` y agrega `terreno_id INTEGER REFERENCES terreno(id)` nullable a `actividad` y `gasto`. Los datos existentes quedan con `NULL` ("sin terreno").
-- Ingresos: tabla nueva `ingreso` (fecha, monto, nota, `terreno_id` opcional). Los resúmenes agregan una sección.
+**Extensibilidad (RNF-07).** Ingresos: tabla nueva `ingreso` (fecha, monto, nota, `cultivo_id` opcional). Los resúmenes agregan una sección. No reescribe las tablas existentes.
 
 ## 4. Respaldo y restauración
 
@@ -190,14 +206,14 @@ CREATE INDEX ix_gasto_fecha       ON gasto(fecha);
 {
   "formato": "appcris-respaldo",
   "version_formato": 1,
-  "version_esquema": 1,
+  "version_esquema": 2,
   "creado_en": "2026-10-10T18:30:00-05:00",
-  "tablas": { "trabajador": [ ... ], "tipo_tarea": [ ... ], "actividad": [ ... ],
-              "jornal": [ ... ], "pago": [ ... ], "categoria_gasto": [ ... ], "gasto": [ ... ] }
+  "tablas": { "trabajador": [ ... ], "tipo_tarea": [ ... ], "categoria_gasto": [ ... ],
+              "cultivo": [ ... ], "actividad": [ ... ], "jornal": [ ... ], "pago": [ ... ], "gasto": [ ... ] }
 }
 ```
 
-Las columnas de cada tabla están en `TABLAS_RESPALDO` (`src/dominio/respaldo.ts`). `config` no se respalda: guarda datos de ese celular (`ultimo_respaldo_en`, `instalado_en`) y restaurar no la toca.
+Las columnas de cada tabla están en `TABLAS_RESPALDO` (`src/dominio/respaldo.ts`). `config` no se respalda: guarda datos de ese celular (`ultimo_respaldo_en`, `instalado_en`, `filtro_cultivo`) y restaurar no la toca.
 
 **Exportar (RF-22):**
 1. Leer todas las tablas en una transacción de lectura.
@@ -214,7 +230,7 @@ Las columnas de cada tabla están en `TABLAS_RESPALDO` (`src/dominio/respaldo.ts
 
 Si algo falla, no cambia nada.
 
-**Versión del esquema.** Un respaldo de una versión más nueva que la app se rechaza con el mensaje "Actualiza la app para restaurarlo". Mientras exista una sola versión del esquema, un respaldo anterior no puede darse; cuando se agregue la migración 2, `validarRespaldo` deberá aceptar versiones anteriores y la restauración convertirlas aplicándoles las migraciones que les faltan, con su prueba.
+**Versión del esquema.** Un respaldo de una versión más nueva que la app se rechaza con el mensaje "Actualiza la app para restaurarlo". Un respaldo de esquema 1 (sin cultivos) se acepta y se convierte al esquema 2: tabla `cultivo` vacía y `cultivo_id` nulo en actividades y gastos.
 
 **Recordatorio (RF-24, RF-25):**
 - **Solo notificación local** (requisitos v0.4): no hay aviso dentro de la app; al cliente le resulta molesto.
@@ -267,14 +283,14 @@ docs/                   requisitos, diseño, adr
 
 | Requisito | Dónde se resuelve |
 |---|---|
-| RF-01, RF-02, RN-05 | `trabajador.activo`, `ON DELETE RESTRICT`, `desactivarTrabajador` |
+| RF-01, RF-02, RN-05 | `trabajador.activo` / `cultivo.activo`, `desactivarTrabajador`, `desactivarCultivo` |
 | RF-03, RF-04 | `tipo_tarea`; la tarifa sugerida solo prellena el formulario |
-| RF-05 a RF-07 | `crearActividadConJornales`, `CHECK` del monto |
+| RF-05 a RF-07, RF-27 | `crearActividadConJornales`, `CHECK` del monto, `cultivo_id` |
 | RF-08 | `editarJornal`/`eliminarJornal`, `CASCADE` de pagos, disparador de actualización |
-| RF-09 a RF-12, RN-01 a RN-03 | `registrarPago`, `pagarPendientes*`, `v_jornal_saldo`, disparadores |
-| RF-13 a RF-15 | Consultas sobre `v_jornal_saldo`, `DatosContext.version` |
-| RF-16 a RF-19 | `gasto`, `categoria_gasto`, `actividad_id` opcional; el tractor es un `trabajador` |
-| RF-20, RF-21 | Repositorio `resumenes.ts` |
+| RF-09 a RF-12, RF-29, RN-01 a RN-03 | `registrarPago`, `pagarPendientes*`, `v_jornal_saldo`, disparadores |
+| RF-13 a RF-15, RF-28 | Consultas sobre `v_jornal_saldo` con filtro de cultivo, `DatosContext.version` |
+| RF-16 a RF-19, RF-27 | `gasto`, `categoria_gasto`, `actividad_id` y `cultivo_id`; el tractor es un `trabajador` |
+| RF-20, RF-21, RF-26 a RF-28 | `resumenes.ts`, `cultivos.ts`, filtro en listas |
 | RF-22 a RF-25 | §4 |
 | RN-04 | Copia de unidad y tarifa en `jornal` |
 | RNF-01, RNF-09 | Sin red; SQLite local |
@@ -283,5 +299,5 @@ docs/                   requisitos, diseño, adr
 | RNF-04 | `synchronous = FULL`, WAL, respaldo |
 | RNF-05 | Ver `pantallas.md` |
 | RNF-06 | Expo, Android, español |
-| RNF-07 | §3, extensibilidad |
+| RNF-07 | §3, ingresos a futuro |
 | RNF-08 | §6 |
