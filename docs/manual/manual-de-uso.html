@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Jornales: manual de uso</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  :root { --verde: #1B5E20; --verde-claro: #E8F2E9; --texto: #1d1d1d; --suave: #555; --borde: #d6dcd6; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Roboto, Arial, sans-serif; color: var(--texto); font-size: 11.5pt; line-height: 1.5; margin: 0; background: #fff; }
+  h1, h2, h3 { color: var(--verde); line-height: 1.2; }
+  h2 { font-size: 18pt; margin: 0 0 8pt; padding-bottom: 4pt; border-bottom: 2px solid var(--verde); }
+  h3 { font-size: 13pt; margin: 14pt 0 4pt; }
+  p { margin: 0 0 7pt; }
+  ol, ul { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  b { color: #000; }
+  .boton { display: inline-block; background: var(--verde); color: #fff; font-weight: 700; font-size: 9.5pt; padding: 0 6pt; border-radius: 4pt; letter-spacing: .3pt; }
+  .tecla { display: inline-block; border: 1.5px solid var(--verde); color: var(--verde); font-weight: 700; font-size: 9.5pt; padding: 0 6pt; border-radius: 4pt; }
+
+  /* Portada */
+  .portada { height: 255mm; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; page-break-after: always; }
+  .portada .marca { width: 34mm; height: 34mm; border-radius: 9mm; background: var(--verde); color: #fff; font-size: 30pt; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 10mm; }
+  .portada h1 { font-size: 34pt; margin: 0 0 4mm; }
+  .portada .sub { font-size: 15pt; color: var(--suave); margin-bottom: 16mm; }
+  .portada .datos { font-size: 11pt; color: var(--suave); }
+
+  /* Índice */
+  .indice { page-break-after: always; }
+  .indice ol { font-size: 12.5pt; line-height: 2; }
+
+  /* Secciones con captura al costado */
+  section { page-break-before: always; }
+  .bloque { display: flex; gap: 8mm; align-items: flex-start; margin-bottom: 6mm; page-break-inside: avoid; }
+  .bloque .texto { flex: 1; }
+  figure { margin: 0; flex: 0 0 52mm; text-align: center; }
+  figure img { width: 52mm; border: 1px solid var(--borde); border-radius: 4mm; display: block; }
+  figcaption { font-size: 8.5pt; color: var(--suave); margin-top: 2mm; }
+  .par { display: flex; gap: 5mm; flex: 0 0 109mm; }
+
+  .nota { background: var(--verde-claro); border-left: 4px solid var(--verde); padding: 6pt 9pt; border-radius: 3pt; margin: 8pt 0; page-break-inside: avoid; }
+  .cuidado { background: #FFF4E5; border-left: 4px solid #B26A00; padding: 6pt 9pt; border-radius: 3pt; margin: 8pt 0; page-break-inside: avoid; }
+  .nota b:first-child, .cuidado b:first-child { display: block; margin-bottom: 2pt; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 10.5pt; }
+  th, td { border: 1px solid var(--borde); padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: var(--verde-claro); }
+  .estado { font-weight: 700; font-size: 9pt; padding: 0 5pt; border-radius: 3pt; border: 1.5px solid; }
+  .pendiente { color: #8a1c1c; } .parcial { color: #8a5a00; } .pagado { color: var(--verde); }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <div class="marca">$</div>
+  <h1>Jornales</h1>
+  <div class="sub">Manual de uso</div>
+  <div class="datos">Control de jornales, pagos y gastos del campo<br>Versión 1.0.1 · Octubre de 2026</div>
+</div>
+
+<div class="indice">
+  <h2>Contenido</h2>
+  <ol>
+    <li>Para qué sirve la app</li>
+    <li>Instalar la app</li>
+    <li>Antes de empezar: trabajadores y tipos de tarea</li>
+    <li>Registrar un día de trabajo</li>
+    <li>A quién debo</li>
+    <li>Pagar</li>
+    <li>Corregir un jornal o una actividad</li>
+    <li>Gastos</li>
+    <li>Resumen del mes</li>
+    <li>Respaldo: no pierdas tus datos</li>
+    <li>Preguntas frecuentes</li>
+  </ol>
+  <div class="nota"><b>La app funciona sin internet.</b>Todo se guarda en tu celular. Lo único que sale del celular es el respaldo, y solo cuando tú lo envías.</div>
+</div>
+
+<section>
+  <h2>1. Para qué sirve la app</h2>
+  <div class="bloque">
+    <div class="texto">
+      <p>Jornales te ayuda a saber en todo momento <b>a quién le debes, cuánto, y si ya le pagaste</b>. También lleva la cuenta de lo que gastas en materiales, almuerzos y otras compras.</p>
+      <p>En la parte de abajo de la pantalla hay cinco pestañas:</p>
+      <table>
+        <tr><th>Pestaña</th><th>Para qué sirve</th></tr>
+        <tr><td><b>Debo</b></td><td>Lo que debes en total y a quién. Es la pantalla principal.</td></tr>
+        <tr><td><b>Actividades</b></td><td>Los días de trabajo que registraste, mes por mes.</td></tr>
+        <tr><td><b>Gastos</b></td><td>Las compras que no son mano de obra.</td></tr>
+        <tr><td><b>Resumen</b></td><td>Cuánto gastaste en la semana, el mes o las fechas que elijas.</td></tr>
+        <tr><td><b>Más</b></td><td>Trabajadores, tipos de tarea, categorías de gasto y respaldo.</td></tr>
+      </table>
+      <h3>Palabras que usa la app</h3>
+      <ul>
+        <li><b>Actividad:</b> un trabajo hecho en una fecha, por ejemplo "Deshierbe lote norte".</li>
+        <li><b>Jornal:</b> lo que le debes a un trabajador por una actividad.</li>
+        <li><b>Tipo de tarea:</b> una clase de trabajo con su precio de siempre, por ejemplo "Diario, $20 por día".</li>
+        <li><b>Pago:</b> dinero que le entregas a un trabajador por un jornal. Puedes pagar por partes.</li>
+      </ul>
+    </div>
+    <figure><img src="img/01-debo.png" alt="Pantalla A quién debo"><figcaption>La pantalla principal: "A quién debo"</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>2. Instalar la app</h2>
+  <ol>
+    <li>Recibe el archivo <b>app-release.apk</b> en tu celular (por WhatsApp, Drive o cable).</li>
+    <li>Tócalo para abrirlo. Si Android pregunta, permite <b>instalar apps de esta fuente</b>.</li>
+    <li>Toca <span class="tecla">Instalar</span>. Aparece la app <b>Jornales</b> con su ícono verde.</li>
+    <li>Ábrela. La primera vez dice <b>$0,00</b> y "No le debes a nadie".</li>
+  </ol>
+  <div class="nota"><b>Actualizar a una versión nueva</b>Instala el archivo nuevo encima, sin desinstalar la app. Tus datos se conservan.</div>
+  <div class="cuidado"><b>No desinstales la app</b>Al desinstalarla se borran todos los datos del celular. Si alguna vez tienes que hacerlo, guarda antes un respaldo (sección 10).</div>
+</section>
+
+<section>
+  <h2>3. Antes de empezar: trabajadores y tipos de tarea</h2>
+  <p>Esto se hace una sola vez. Después solo agregas a alguien cuando llega un trabajador nuevo.</p>
+  <div class="bloque">
+    <div class="texto">
+      <h3>Agregar trabajadores</h3>
+      <ol>
+        <li>Toca la pestaña <b>Más</b> y luego <b>Trabajadores</b>.</li>
+        <li>Toca el botón verde <span class="boton">+</span> abajo a la derecha.</li>
+        <li>Escribe el <b>nombre</b>. El teléfono es opcional.</li>
+        <li>Toca <span class="boton">GUARDAR</span>.</li>
+      </ol>
+      <div class="nota"><b>¿Alquilas un tractor por horas?</b>Agrégalo como un trabajador más, por ejemplo "Tractor". Así aparece en "A quién debo" como cualquier otro, y se le paga igual.</div>
+      <p><b>Si alguien deja de trabajar contigo,</b> ábrelo en la lista y toca <span class="tecla">Desactivar</span>. Ya no aparece al registrar actividades, pero su historial se conserva. Puedes reactivarlo cuando quieras.</p>
+    </div>
+    <div class="par">
+      <figure><img src="img/03-trabajadores.png" alt="Lista de trabajadores"><figcaption>Lista de trabajadores</figcaption></figure>
+      <figure><img src="img/04-nuevo-trabajador.png" alt="Nuevo trabajador"><figcaption>Nuevo trabajador</figcaption></figure>
+    </div>
+  </div>
+  <div class="bloque">
+    <div class="texto">
+      <h3>Agregar tipos de tarea</h3>
+      <p>Un tipo de tarea guarda el precio que pagas normalmente, para no escribirlo cada vez.</p>
+      <ol>
+        <li>En <b>Más</b>, toca <b>Tipos de tarea y tarifas</b> y luego <span class="boton">+</span>.</li>
+        <li>Escribe el nombre, por ejemplo "Diario" o "Fumigación".</li>
+        <li>Elige cómo se cobra: <b>día</b>, <b>tarea</b> (un valor fijo por el trabajo) u <b>hora</b>.</li>
+        <li>Escribe la tarifa, por ejemplo <b>20</b> para $20,00, y toca <span class="boton">GUARDAR</span>.</li>
+      </ol>
+      <p>Si después cambias la tarifa, los jornales que ya registraste <b>no cambian</b>. Solo se usa el precio nuevo en lo que registres desde ese momento.</p>
+    </div>
+    <div class="par">
+      <figure><img src="img/05-tipos-tarea.png" alt="Tipos de tarea"><figcaption>Tipos de tarea</figcaption></figure>
+      <figure><img src="img/06-nuevo-tipo.png" alt="Nuevo tipo de tarea"><figcaption>Nuevo tipo de tarea</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Registrar un día de trabajo</h2>
+  <p>Cada vez que alguien trabaja, registras una <b>actividad</b>. Se hace en tres pasos y toma menos de un minuto, aunque sean varios trabajadores.</p>
+  <div class="bloque">
+    <div class="texto">
+      <h3>Paso 1: qué se hizo</h3>
+      <ol>
+        <li>En la pantalla <b>Debo</b>, toca el botón verde <span class="boton">+</span>.</li>
+        <li>La fecha ya dice <b>Hoy</b>. Si el trabajo fue otro día, tócala para cambiarla.</li>
+        <li>Toca el <b>tipo de tarea</b>, por ejemplo "Diario". Si es un trabajo nuevo, toca <b>+ Otro</b>.</li>
+        <li>Si quieres, escribe una descripción, por ejemplo "Deshierbe lote norte".</li>
+        <li>Toca <span class="boton">SIGUIENTE</span>.</li>
+      </ol>
+    </div>
+    <figure><img src="img/07-act-paso1.png" alt="Paso 1"><figcaption>Paso 1 de 3</figcaption></figure>
+  </div>
+  <div class="bloque">
+    <div class="texto">
+      <h3>Paso 2: quiénes trabajaron</h3>
+      <ol>
+        <li>Arriba, en <b>Para todos</b>, revisa la cantidad (por ejemplo 1 día o 3 horas) y la tarifa. Se aplican a todos los que marques.</li>
+        <li>Toca el nombre de cada trabajador que vino. Abajo se ve cuántos marcaste y el total.</li>
+        <li>Si falta alguien en la lista, toca <b>+ Nuevo trabajador</b> y agrégalo ahí mismo.</li>
+        <li>Toca <span class="boton">SIGUIENTE</span>.</li>
+      </ol>
+    </div>
+    <figure><img src="img/08-act-paso2.png" alt="Paso 2"><figcaption>Paso 2 de 3</figcaption></figure>
+  </div>
+  <div class="bloque">
+    <div class="texto">
+      <h3>Paso 3: revisar y guardar</h3>
+      <p>Ves lo que le vas a deber a cada uno y el total. Si todo está bien, toca <span class="boton">GUARDAR</span>.</p>
+      <p><b>Si a alguien le pagas distinto,</b> toca el lápiz junto a su nombre (<b>Ajustar</b>), cambia su cantidad o su tarifa y toca <span class="tecla">Listo</span>. Por ejemplo, si a una persona le pagas $25 en vez de $20, cambia su tarifa a 25. Si solo trabajó medio día, cambia su cantidad a 0,5.</p>
+      <div class="nota"><b>Así se calcula lo que debes</b>Cantidad × tarifa. Ejemplos: 1 día × $20 = $20,00. 3 horas de tractor × $15 = $45,00.</div>
+    </div>
+    <div class="par">
+      <figure><img src="img/09-act-paso3.png" alt="Paso 3"><figcaption>Paso 3: revisar</figcaption></figure>
+      <figure><img src="img/09b-ajustar.png" alt="Ajustar a un trabajador"><figcaption>Ajustar a un trabajador</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. A quién debo</h2>
+  <div class="bloque">
+    <div class="texto">
+      <p>La pestaña <b>Debo</b> es la pantalla principal. Muestra:</p>
+      <ul>
+        <li>Arriba, el <b>total que debes</b> sumando a todos.</li>
+        <li>Debajo, cada trabajador al que le debes algo, del que más al que menos, con cuántos jornales tiene pendientes.</li>
+      </ul>
+      <p>Cuando le terminas de pagar a alguien, desaparece de la lista. Si no le debes a nadie, dice "No le debes a nadie".</p>
+      <h3>Ver el detalle de un trabajador</h3>
+      <p>Toca su nombre. Ves cuánto le debes, cada jornal pendiente y todos los pagos que ya le hiciste, con su fecha.</p>
+    </div>
+    <div class="par">
+      <figure><img src="img/01-debo.png" alt="A quién debo"><figcaption>A quién debo</figcaption></figure>
+      <figure><img src="img/11-trabajador.png" alt="Detalle del trabajador"><figcaption>Detalle de un trabajador</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>6. Pagar</h2>
+  <div class="bloque">
+    <div class="texto">
+      <h3>Pagar un jornal (todo o una parte)</h3>
+      <ol>
+        <li>Abre al trabajador desde <b>Debo</b>.</li>
+        <li>En el jornal que vas a pagar, toca <span class="boton">Pagar</span>.</li>
+        <li>El monto ya viene con todo lo que falta. Si le vas a dar solo una parte, bórralo y escribe lo que le entregas, por ejemplo <b>5</b>.</li>
+        <li>Revisa la fecha y toca <span class="boton">REGISTRAR PAGO</span>.</li>
+      </ol>
+      <p>La deuda baja al instante. La app <b>no deja pagar más</b> de lo que se debe: si escribes de más, te avisa cuánto es lo máximo y no guarda nada.</p>
+      <h3>Pagar todo de una vez</h3>
+      <p>Toca <span class="boton">PAGAR TODO</span>:</p>
+      <ul>
+        <li>en un <b>trabajador</b>, para pagarle todos sus jornales pendientes;</li>
+        <li>en una <b>actividad</b>, para pagar a todos los que trabajaron ese día.</li>
+      </ul>
+      <p>La app te muestra cuánto vas a registrar y te pide confirmar.</p>
+    </div>
+    <figure><img src="img/12-pago.png" alt="Registrar pago"><figcaption>Registrar un pago</figcaption></figure>
+  </div>
+  <h3>Qué significa cada estado</h3>
+  <table>
+    <tr><th>Estado</th><th>Quiere decir</th></tr>
+    <tr><td><span class="estado pendiente">PENDIENTE</span></td><td>Todavía no le has pagado nada de ese jornal.</td></tr>
+    <tr><td><span class="estado parcial">PARCIAL</span></td><td>Le pagaste una parte. Debajo dice cuánto pagó y cuánto falta.</td></tr>
+    <tr><td><span class="estado pagado">PAGADO</span></td><td>Ya le pagaste todo ese jornal.</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>7. Corregir un jornal o una actividad</h2>
+  <div class="bloque">
+    <div class="texto">
+      <p>En la pestaña <b>Actividades</b> están todos los días de trabajo del mes. Con las flechas de arriba cambias de mes. Toca una actividad para ver su detalle: lo que cuesta en jornales y gastos, cuánto se ha pagado y cuánto falta.</p>
+      <h3>Cambiar o borrar el jornal de un trabajador</h3>
+      <ol>
+        <li>Abre la actividad.</li>
+        <li>Junto al trabajador, toca los <b>tres puntos</b> (⋮).</li>
+        <li>Elige <span class="tecla">EDITAR</span> para cambiar la cantidad o la tarifa, o <span class="tecla">ELIMINAR</span> para quitarlo.</li>
+      </ol>
+      <div class="cuidado"><b>Si el jornal ya tiene pagos</b>Al eliminarlo se borran también sus pagos. La app te avisa antes y te pide confirmar.</div>
+      <h3>Borrar una actividad</h3>
+      <p>Solo se puede cuando ya no tiene jornales ni gastos. Quítalos primero; entonces aparece el botón <span class="tecla">Eliminar actividad</span> al final del detalle.</p>
+    </div>
+    <div class="par">
+      <figure><img src="img/10-actividad.png" alt="Detalle de la actividad"><figcaption>Detalle de una actividad</figcaption></figure>
+      <figure><img src="img/10c-opciones-jornal.png" alt="Opciones del jornal"><figcaption>Opciones de un jornal</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>8. Gastos</h2>
+  <div class="bloque">
+    <div class="texto">
+      <p>Aquí registras las compras que no son mano de obra: materiales, almuerzos, alquiler de maquinaria y otros.</p>
+      <h3>Registrar un gasto</h3>
+      <ol>
+        <li>Toca la pestaña <b>Gastos</b> y luego <span class="boton">+</span>.</li>
+        <li>Escribe el <b>monto</b>. Para centavos usa coma: <b>12,50</b>.</li>
+        <li>Revisa la fecha y toca la <b>categoría</b>. Si necesitas otra, toca <b>+ Otra</b>.</li>
+        <li>Si el gasto fue para un trabajo en especial (por ejemplo, los almuerzos del deshierbe), toca esa <b>actividad</b>. Así se suma al costo de esa actividad.</li>
+        <li>Si quieres, escribe una nota, por ejemplo "5 almuerzos", y toca <span class="boton">GUARDAR</span>.</li>
+      </ol>
+      <p>También puedes agregar un gasto desde el detalle de una actividad, con <span class="tecla">+ Agregar gasto</span>.</p>
+      <p><b>Para corregir o borrar un gasto,</b> tócalo en la lista.</p>
+      <div class="nota"><b>El tractor no es un gasto</b>Si lo pagas por horas, regístralo como trabajador (sección 3), así sabes cuánto le debes.</div>
+    </div>
+    <div class="par">
+      <figure><img src="img/13-gastos.png" alt="Gastos"><figcaption>Gastos del mes</figcaption></figure>
+      <figure><img src="img/14-nuevo-gasto.png" alt="Nuevo gasto"><figcaption>Nuevo gasto</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>9. Resumen del mes</h2>
+  <div class="bloque">
+    <div class="texto">
+      <p>La pestaña <b>Resumen</b> te dice cuánto gastaste y en qué.</p>
+      <ul>
+        <li>Arriba eliges <b>Semana</b>, <b>Mes</b> o <b>Rango</b> (las fechas que quieras). Con las flechas pasas al período anterior o al siguiente.</li>
+        <li><b>Total gastado:</b> mano de obra más todos los gastos.</li>
+        <li><b>Mano de obra:</b> lo que ganaron los trabajadores en ese período, ya lo hayas pagado o no.</li>
+        <li>Debajo, el total de cada categoría de gasto.</li>
+        <li>Al final, cuánto de la mano de obra ya está <b>pagado</b>.</li>
+      </ul>
+    </div>
+    <figure><img src="img/15-resumen.png" alt="Resumen"><figcaption>Resumen del mes</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>10. Respaldo: no pierdas tus datos</h2>
+  <div class="cuidado"><b>¿Por qué es importante?</b>Los datos viven solo en tu celular. Si se pierde, se daña o lo cambias, solo podrás recuperarlos con un respaldo.</div>
+  <div class="bloque">
+    <div class="texto">
+      <h3>Guardar un respaldo</h3>
+      <ol>
+        <li>En <b>Más</b>, toca <b>Respaldo</b>.</li>
+        <li>Toca <span class="boton">GUARDAR RESPALDO AHORA</span>.</li>
+        <li>Elige dónde guardarlo: <b>WhatsApp</b> (puedes enviártelo a ti mismo), <b>Drive</b> o <b>correo</b>. Se envía un archivo llamado <b>jornales-respaldo-</b> con la fecha.</li>
+        <li>Al volver, la app pregunta "¿Guardaste el respaldo?". Responde <span class="tecla">SÍ</span> solo si de verdad lo enviaste.</li>
+      </ol>
+      <p>La pantalla muestra la fecha de tu <b>último respaldo</b>.</p>
+      <h3>Recordatorio mensual</h3>
+      <p>Cuando pasan 30 días sin respaldo, el celular te muestra una notificación: <b>"Es hora de guardar el respaldo"</b>. Llega en la mañana, entre las 9 y las 10, y se repite cada día hasta que guardes uno. Tocarla te lleva a la pantalla de respaldo.</p>
+      <p>La primera vez que guardas un respaldo, Android te pide permiso para mostrar notificaciones. Toca <span class="tecla">Permitir</span> para que te llegue el recordatorio.</p>
+    </div>
+    <figure><img src="img/16-respaldo.png" alt="Respaldo"><figcaption>Pantalla de respaldo</figcaption></figure>
+  </div>
+  <h3>Recuperar los datos (restaurar)</h3>
+  <p>Sirve para pasar tus datos a un celular nuevo o recuperarlos después de un problema.</p>
+  <ol>
+    <li>Instala la app en el celular (sección 2) y descarga el último archivo de respaldo desde WhatsApp, Drive o tu correo.</li>
+    <li>En <b>Más › Respaldo</b>, toca <span class="tecla">RESTAURAR DESDE ARCHIVO</span> y elige el archivo.</li>
+    <li>La app muestra qué contiene (cuántos trabajadores, actividades, jornales y pagos) y de qué fecha es.</li>
+    <li>Toca <span class="tecla">RESTAURAR</span>. Verás el mensaje "Datos restaurados."</li>
+  </ol>
+  <div class="cuidado"><b>Restaurar reemplaza todo</b>Lo que hay en la app se cambia por lo que tiene el respaldo. Lo que registraste después de ese respaldo se pierde. Usa siempre el respaldo más reciente.</div>
+</section>
+
+<section>
+  <h2>11. Preguntas frecuentes</h2>
+  <h3>¿Necesito internet?</h3>
+  <p>No. Todo funciona sin señal. Solo necesitas internet para enviar el respaldo por WhatsApp, Drive o correo.</p>
+  <h3>Me equivoqué en un monto. ¿Cómo lo corrijo?</h3>
+  <p>Si es un jornal, ábrelo desde su actividad, toca los tres puntos (⋮) y luego <b>Editar</b> (sección 7). Si es un gasto, tócalo en la lista de Gastos.</p>
+  <h3>¿Cómo escribo los centavos?</h3>
+  <p>Con coma: <b>12,50</b> es doce dólares con cincuenta centavos. Si es un valor entero, basta con <b>20</b>.</p>
+  <h3>Le pagué de más a alguien por error.</h3>
+  <p>La app no deja registrar un pago mayor a lo que se debe. Si registraste un pago con el monto equivocado, elimina el jornal (también se borran sus pagos) y vuelve a registrarlo.</p>
+  <h3>Un trabajador ya no viene. ¿Lo borro?</h3>
+  <p>No se borra: se <b>desactiva</b> (sección 3). Así no estorba en la lista y conservas lo que le pagaste.</p>
+  <h3>No veo el botón Guardar.</h3>
+  <p>A veces el teclado lo tapa. Baja el teclado con la flecha o el botón de atrás del celular y aparecerá.</p>
+  <h3>Cambié de celular.</h3>
+  <p>Guarda un respaldo en el celular viejo, instala la app en el nuevo y restaura ese respaldo (sección 10).</p>
+</section>
+
+</body>
+</html>
